@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import Tuple, List, Dict
 import base64
-from core.ocr.paddle_ocr import PaddleOCR
+from paddleocr import PaddleOCR
 import pdf2image
 
 from .interface import OCREngine, OCRResult
