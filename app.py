@@ -7,6 +7,10 @@ import pdf2image
 from PIL import Image
 import logging
 import numpy as np
+import base64  # Add this import
+from datetime import datetime
+import shutil
+
 
 app = Flask(__name__)
 CORS(app)
@@ -71,7 +75,7 @@ if not os.path.exists(UPLOAD_FOLDER):
     logger.info(f"Created upload directory: {UPLOAD_FOLDER}")
 logger.info(f"Upload directory: {os.path.abspath(UPLOAD_FOLDER)}")
 
-MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100MB max file size
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
@@ -188,6 +192,14 @@ def index():
     """Render the main application page."""
     return render_template('index.html')
 
+def create_upload_dir():
+    """Create a timestamped upload directory"""
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+    upload_path = os.path.join(UPLOAD_FOLDER, timestamp)
+    os.makedirs(upload_path, exist_ok=True)
+    logger.info(f"Created upload directory: {upload_path}")
+    return upload_path
+
 @app.route('/api/ocr', methods=['POST'])
 def ocr_endpoint():
     """Handle OCR processing requests."""
@@ -213,62 +225,66 @@ def ocr_endpoint():
     logger.debug(f"File size: {request.content_length} bytes")
         
     try:
+
+        # Create timestamped directory for this upload
+        upload_dir = create_upload_dir()
+        
         filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        filepath = os.path.join(upload_dir, filename)
+        logger.info(f"Saving file to: {filepath}")
         file.save(filepath)
         
+        # Process based on file type
+        preview_path = None
         if filename.lower().endswith('.pdf'):
-            if not PDF_SUPPORT:
-                logger.error("PDF file uploaded but PDF support is not enabled")
-                return jsonify({
-                    'error': 'PDF support is not enabled. To enable PDF support, install required packages:\n' +
-                            'pip install pdf2image\n' +
-                            'And install poppler:\n' +
-                            '- Ubuntu/Debian: sudo apt-get install poppler-utils\n' +
-                            '- MacOS: brew install poppler\n' +
-                            'Or use image files (JPG, PNG) instead.'
-                }), 400
-                
-            logger.info("Processing PDF file")
             try:
-                # Convert PDF to images
-                logger.debug("Converting PDF to images")
+                logger.info("Converting PDF to image for preview")
                 images = pdf2image.convert_from_path(filepath)
-                logger.info(f"PDF conversion completed. Got {len(images)} pages")
+                logger.info(f"Converted {len(images)} pages")
+
+                pages_data = []
+                if images:
+                    preview_path = os.path.join(upload_dir, f"{os.path.splitext(filename)[0]}_preview.jpg")
+                    images[0].save(preview_path, 'JPEG')
+                    logger.info(f"Preview saved to: {preview_path}")
+                    
+                    # Convert preview to base64 for response
+                    with open(preview_path, 'rb') as img_file:
+                        preview_data = base64.b64encode(img_file.read()).decode('utf-8')
+                
+                # Use first page for OCR
+                temp_image_path = os.path.join(app.config['UPLOAD_FOLDER'], 'temp.jpg')
+                images[0].save(temp_image_path, 'JPEG')
+                structured_data, raw_text = OCRProcessor.process_image(temp_image_path)
+                os.remove(temp_image_path)
+                
             except Exception as pdf_error:
-                logger.error(f"PDF conversion failed: {str(pdf_error)}")
-                if "Unable to get page count" in str(pdf_error):
-                    return jsonify({
-                        'error': 'PDF processing failed. Please ensure poppler is installed. ' +
-                                'For Ubuntu/Debian: sudo apt-get install poppler-utils, ' +
-                                'For MacOS: brew install poppler'
-                    }), 500
-                return jsonify({'error': f'PDF processing failed: {str(pdf_error)}'}), 500
-            
-            # Process first page for now
-            temp_image_path = os.path.join(app.config['UPLOAD_FOLDER'], 'temp.jpg')
-            logger.debug(f"Saving first page to temporary file: {temp_image_path}")
-            images[0].save(temp_image_path, 'JPEG')
-            
-            logger.info("Processing converted PDF page")
-            structured_data, raw_text = OCRProcessor.process_image(temp_image_path)
-            
-            logger.debug("Cleaning up temporary file")
-            os.remove(temp_image_path)
-            logger.info("PDF processing completed")
+                logger.error(f"PDF processing error: {str(pdf_error)}")
+                return jsonify({'error': str(pdf_error)}), 500
         else:
+            # For images, use as-is
             structured_data, raw_text = OCRProcessor.process_image(filepath)
-            
-        # Clean up
-        os.remove(filepath)
-        
+            # Convert image to base64 for preview
+            with open(filepath, 'rb') as img_file:
+                preview_data = base64.b64encode(img_file.read()).decode('utf-8')
+
+        # Clean up uploaded files if not keeping them
+        if not KEEP_FILES:
+            shutil.rmtree(upload_dir)
+            logger.info(f"Cleaned up directory: {upload_dir}")
+
         return jsonify({
             'data': structured_data,
-            'raw': raw_text
+            'raw': raw_text,
+            'preview': f"data:image/jpeg;base64,{preview_data}"
         })
         
     except Exception as e:
         logger.error(f"OCR processing error: {str(e)}")
+        # Clean up on error
+        if 'upload_dir' in locals():
+            shutil.rmtree(upload_dir)
+            logger.info(f"Cleaned up directory after error: {upload_dir}")
         return jsonify({'error': f'Failed to process file: {str(e)}'}), 500
 
 @app.route('/api/analyze', methods=['POST'])
