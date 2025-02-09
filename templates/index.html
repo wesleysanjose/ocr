@@ -21,7 +21,7 @@
       <!-- File Upload Section -->
       <div class="col-span-1">
         <div class="bg-white p-4 rounded-lg shadow">
-          <h2 class="text-lg font-semibold mb-4">Document Upload</h2>
+          <h2 class="text-lg font-semibold mb-4">上传文件</h2>
           <form id="upload-form">
             <div
               class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center"
@@ -47,7 +47,7 @@
 
           <!-- Image Preview Section -->
           <div id="preview-section" class="mt-4 hidden">
-            <h3 class="text-lg font-semibold mb-2">Preview</h3>
+            <h3 class="text-lg font-semibold mb-2">预览</h3>
             <div class="relative border rounded-lg p-2 bg-white">
               <div class="overflow-auto" style="max-height: 400px">
                 <div id="preview-container" class="relative">
@@ -81,32 +81,95 @@
         </div>
       </div>
 
-      <!-- OCR Results Section -->
+      <!-- Replace the OCR Results Section in your HTML -->
       <div class="col-span-1">
         <div class="bg-white p-4 rounded-lg shadow">
-          <h2 class="text-lg font-semibold mb-4">OCR Results</h2>
-          <textarea
-            id="ocr-results"
-            class="w-full h-32 p-2 border border-gray-300 rounded mb-2"
-            readonly
-          ></textarea>
+          <h2 class="text-lg font-semibold mb-4">原始扫描结果</h2>
+          <!-- Replace textarea with selectable lines -->
           <div
+            id="ocr-results"
+            class="w-full h-48 p-2 border border-gray-300 rounded mb-2 overflow-auto"
+          >
+            <!-- Lines will be inserted here -->
+          </div>
+          <div class="mb-2">
+            <button
+              id="process-btn"
+              class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              disabled
+            >
+              处理
+            </button>
+          </div>
+
+          <!-- Add Key-Value Display -->
+          <div class="mb-2">
+            <h3 class="text-md font-semibold mb-2">复核后结果</h3>
+            <div
+              id="kv-display"
+              class="w-full border border-gray-300 rounded p-2 h-96 overflow-auto"
+            >
+              <!-- Key-value pairs will be displayed here -->
+            </div>
+          </div>
+
+          <!--<div
             id="ocr-viewer"
-            class="border border-gray-200 rounded h-96 overflow-auto"
-          ></div>
+            class="border border-gray-200 rounded h-48 overflow-auto"
+          ></div>-->
+        </div>
+      </div>
+
+      <!-- Add Modal for Key Input -->
+      <div
+        id="key-input-modal"
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center"
+      >
+        <div class="bg-white p-4 rounded-lg shadow-lg">
+          <h3 class="text-lg font-semibold mb-4">复核确认</h3>
+          <p class="mb-2">
+            Selected text:
+            <span id="modal-selected-text" class="font-mono text-sm"></span>
+          </p>
+          <input
+            type="text"
+            id="key-input"
+            class="w-full p-2 border border-gray-300 rounded mb-4"
+            placeholder="输入抬头"
+          />
+          <input
+            type="text"
+            id="value-input"
+            class="w-full p-2 border border-gray-300 rounded mb-4"
+            placeholder="输入内容"
+          />
+          <div class="flex justify-end gap-2">
+            <button
+              id="modal-cancel"
+              class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button
+              id="modal-save"
+              class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Save
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- AI Analysis Section -->
       <div class="col-span-1">
         <div class="bg-white p-4 rounded-lg shadow">
-          <h2 class="text-lg font-semibold mb-4">AI Analysis</h2>
+          <h2 class="text-lg font-semibold mb-4">人工智能错误分析</h2>
           <button
             id="analyze-btn"
             class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 mb-4"
             disabled
           >
-            Analyze Text
+            分析文本
           </button>
           <div
             id="analysis-results"
@@ -124,7 +187,7 @@
       const uploadForm = document.getElementById("upload-form");
       const fileInput = document.getElementById("file-upload");
       const ocrResults = document.getElementById("ocr-results");
-      const ocrViewer = document.getElementById("ocr-viewer");
+      //const ocrViewer = document.getElementById("ocr-viewer");
       const analyzeBtn = document.getElementById("analyze-btn");
       const uploadStatus = document.getElementById("upload-status");
 
@@ -136,29 +199,23 @@
       const zoomLevelSpan = document.getElementById("zoom-level");
       let currentZoom = 100;
 
-      // Zoom functionality
-      function updateZoom() {
-        previewImage.style.transform = `scale(${currentZoom / 100})`;
-        previewImage.style.transformOrigin = "top left";
-        zoomLevelSpan.textContent = `${currentZoom}%`;
+      // Add these after your existing const declarations
+      const keyValueMap = new Map();
+      const modal = document.getElementById("key-input-modal");
+      const modalSelectedText = document.getElementById("modal-selected-text");
+      const keyInput = document.getElementById("key-input");
+      const valueInput = document.getElementById("value-input");
+      const modalSave = document.getElementById("modal-save");
+      const modalCancel = document.getElementById("modal-cancel");
+      const kvDisplay = document.getElementById("kv-display");
 
-        // Enable/disable zoom buttons based on limits
-        zoomOutBtn.disabled = currentZoom <= 25;
-        zoomInBtn.disabled = currentZoom >= 300;
-      }
-
-      zoomInBtn.addEventListener("click", () => {
-        currentZoom = Math.min(currentZoom + 25, 300);
-        updateZoom();
-      });
-
-      zoomOutBtn.addEventListener("click", () => {
-        currentZoom = Math.max(currentZoom - 25, 25);
-        updateZoom();
-      });
+      const processBtn = document.getElementById("process-btn");
+      let selectedLines = new Set();
+      let processedLines = new Set(); // Track processed lines
 
       fileInput.addEventListener("change", async (event) => {
         const file = event.target.files[0];
+        console.log("File selected:", file);
         if (!file) return;
 
         // Show preview for image files
@@ -183,7 +240,7 @@
           // Show loading state
           uploadStatus.classList.remove("hidden");
           ocrResults.value = "Processing...";
-          ocrViewer.innerHTML = '<div class="p-4">Processing document...</div>';
+          //ocrViewer.innerHTML = '<div class="p-4">Processing document...</div>';
           analyzeBtn.disabled = true;
 
           // Send file to OCR endpoint
@@ -199,27 +256,262 @@
           const result = await response.json();
 
           // Display raw text
-          ocrResults.value = result.raw;
+          //ocrResults.value = result.raw;
 
           // Display structured OCR data
-          displayOCRData(result.data);
+          displayOCRResults(result.raw);
+
+          // not to display the coordinates
+          //displayOCRData(result.data);
 
           // Enable analyze button
           analyzeBtn.disabled = false;
         } catch (error) {
           console.error("Upload error:", error);
           ocrResults.value = "Error processing file. Please try again.";
-          ocrViewer.innerHTML =
-            '<div class="p-4 text-red-500">Error processing document</div>';
+          //ocrViewer.innerHTML =
+          //  '<div class="p-4 text-red-500">Error processing document</div>';
         } finally {
           uploadStatus.classList.add("hidden");
         }
       });
 
+      // Zoom functionality
+      function updateZoom() {
+        previewImage.style.transform = `scale(${currentZoom / 100})`;
+        previewImage.style.transformOrigin = "top left";
+        zoomLevelSpan.textContent = `${currentZoom}%`;
+
+        // Enable/disable zoom buttons based on limits
+        zoomOutBtn.disabled = currentZoom <= 25;
+        zoomInBtn.disabled = currentZoom >= 300;
+      }
+
+      zoomInBtn.addEventListener("click", () => {
+        currentZoom = Math.min(currentZoom + 25, 300);
+        updateZoom();
+      });
+
+      zoomOutBtn.addEventListener("click", () => {
+        currentZoom = Math.max(currentZoom - 25, 25);
+        updateZoom();
+      });
+
+      // display scanned text
+      function displayOCRResults(raw) {
+        console.log("displayOCRResults input type:", typeof raw);
+        console.log("displayOCRResults input:", raw);
+
+        if (!raw || typeof raw !== "string") {
+          console.error("Invalid input to displayOCRResults:", raw);
+          ocrResults.innerHTML =
+            '<div class="p-4 text-red-500">Invalid OCR result format</div>';
+          return;
+        }
+
+        const lines = raw.split("\n");
+        console.log("Number of lines:", lines.length);
+
+        ocrResults.innerHTML = lines
+          .map((line, index) => {
+            const trimmedLine = ToCDB(line.trim());
+            console.log(`Line ${index}:`, trimmedLine);
+            return trimmedLine
+              ? `
+                    <div class="ocr-line p-1 hover:bg-gray-100 cursor-pointer select-none" 
+                         data-index="${index}">
+                        ${trimmedLine}
+                    </div>
+                `
+              : "";
+          })
+          .join("");
+
+        const lineElements = ocrResults.querySelectorAll(".ocr-line");
+        console.log("Created line elements:", lineElements.length);
+
+        lineElements.forEach((line) => {
+          line.addEventListener("click", (e) => {
+            console.log("Line clicked:", line.textContent);
+
+            // Skip if already processed
+            if (processedLines.has(line.dataset.index)) {
+              console.log("Skipping processed line");
+              return;
+            }
+
+            if (e.shiftKey && lastSelected) {
+              // Shift+Click for range selection
+              const start = Array.from(lineElements).indexOf(lastSelected);
+              const end = Array.from(lineElements).indexOf(line);
+              const range = Array.from(lineElements).slice(
+                Math.min(start, end),
+                Math.max(start, end) + 1
+              );
+              // Filter out processed lines
+              selectedLines = new Set(
+                range.filter((l) => !processedLines.has(l.dataset.index))
+              );
+              lineElements.forEach((l) => {
+                if (!processedLines.has(l.dataset.index)) {
+                  l.classList.remove("bg-blue-100");
+                }
+              });
+              Array.from(selectedLines).forEach((l) =>
+                l.classList.add("bg-blue-100")
+              );
+            } else if (e.ctrlKey || e.metaKey) {
+              // Ctrl/Cmd+Click for multi-select
+              if (!processedLines.has(line.dataset.index)) {
+                line.classList.toggle("bg-blue-100");
+                if (line.classList.contains("bg-blue-100")) {
+                  selectedLines.add(line);
+                } else {
+                  selectedLines.delete(line);
+                }
+                lastSelected = line;
+              }
+            } else {
+              // Normal click for single select
+              lineElements.forEach((l) => {
+                if (!processedLines.has(l.dataset.index)) {
+                  l.classList.remove("bg-blue-100");
+                }
+              });
+              if (!processedLines.has(line.dataset.index)) {
+                line.classList.add("bg-blue-100");
+                selectedLines = new Set([line]);
+                lastSelected = line;
+              }
+            }
+
+            // Enable/disable process button based on selection
+            processBtn.disabled = selectedLines.size === 0;
+            console.log("Selected lines:", selectedLines.size);
+          });
+        });
+      }
+
+      // select scanned text and confirm key-value pair
+      function processSelection(selectedLines) {
+        // Convert to array and clean each line
+        const cleanedText = Array.from(selectedLines)
+          .map(
+            (line) =>
+              line.textContent
+                .trim() // Remove leading/trailing spaces
+                .replace(/\n/g, "") // Remove any newline characters
+          )
+          .join("") // Join without adding newlines
+          .trim(); // Final trim to ensure no extra spaces
+
+        console.log("Cleaned text:", JSON.stringify(cleanedText));
+
+        modalSelectedText.textContent = cleanedText;
+        keyInput.value = cleanedText.includes(":")
+          ? cleanedText.split(":")[0].trim()
+          : "";
+        valueInput.value = cleanedText.includes(":")
+          ? cleanedText.split(":")[1].trim()
+          : cleanedText;
+        modal.classList.remove("hidden");
+        keyInput.focus();
+      }
+      // Add process button handler
+      processBtn.addEventListener("click", () => {
+        if (selectedLines.size > 0) {
+          processSelection(selectedLines);
+        }
+      });
+
+      // Update modal save handler
+      modalSave.addEventListener("click", () => {
+        const key = keyInput.value.trim();
+        if (key) {
+          let value = valueInput.value.trim();
+          keyValueMap.set(key, value);
+          updateKVDisplay();
+          modal.classList.add("hidden");
+
+          // Mark selected lines as processed
+          selectedLines.forEach((line) => {
+            processedLines.add(line.dataset.index);
+            line.classList.remove("bg-blue-100");
+            line.classList.add("bg-gray-300");
+          });
+
+          // Clear selection and disable process button
+          selectedLines.clear();
+          processBtn.disabled = true;
+        } else {
+          alert("Please enter a field name");
+        }
+      });
+
+      // Add modal handlers
+      modalCancel.addEventListener("click", () => {
+        modal.classList.add("hidden");
+      });
+
+      // after user selects lines and confirms key-value pair, add the key-value pair to the display
+      function updateKVDisplay() {
+        kvDisplay.innerHTML = Array.from(keyValueMap.entries())
+          .map(
+            ([key, value]) => `
+            <div class="flex gap-2 mb-1 p-1 hover:bg-gray-50">
+                <span class="font-semibold min-w-[100px]">${key}:</span>
+                <span class="flex-1">${value}</span>
+                <button 
+                    class="remove-kv px-2 text-red-500 hover:bg-red-50 rounded" 
+                    data-key="${key}"
+                >
+                    ×
+                </button>
+            </div>
+        `
+          )
+          .join("");
+
+        // Add click handlers for remove buttons
+        kvDisplay.querySelectorAll(".remove-kv").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            const key = e.target.dataset.key;
+            keyValueMap.delete(key);
+
+            // Unmark the processed lines for this key-value pair
+            // Convert processed lines back to selectable
+            const lineElements = document.querySelectorAll(".ocr-line");
+            lineElements.forEach((line) => {
+              if (line.textContent.includes(key)) {
+                const index = line.dataset.index;
+                processedLines.delete(index);
+                line.classList.remove("bg-gray-300");
+              }
+            });
+
+            updateKVDisplay();
+          });
+        });
+      }
+
       // Handle AI analysis with streaming
       analyzeBtn.addEventListener("click", () => {
-        const text = ocrResults.value;
-        if (!text) return;
+        // Get text from all OCR lines instead of textarea value
+
+        // get text from kvDisplay
+        const text = kvDisplay.textContent;
+
+        // const text = Array.from(
+        //   document.querySelectorAll("#ocr-results .ocr-line")
+        // )
+        //   .map((line) => line.textContent.trim())
+        //   .join("\n");
+        // console.log("Analyze text:", text);
+        // if (!text) {
+        //   console.log("No text to analyze");
+
+        //   return;
+        // }
 
         // Disable the generate button and enable the stop button
         analyzeBtn.disabled = true;
@@ -242,11 +534,11 @@
             messages: [
               {
                 role: "system",
-                content: "You are a medical record formatter.",
+                content: "你是一个有经验的医生",
               },
               {
                 role: "user",
-                content: `based on the scanned ocr text, form a human readable person medical record in two column\n\nOCR Text:\n${text}`,
+                content: `基于报告扫描的内容，请仔细检查确认报告是正确的，没有错误用语，错别字，特别是医学用语和药品名称。报告首先给个整体的结果，是否有错误。具体的错误请用红色标示\n\nOCR Text:\n${text}`,
               },
             ],
             max_tokens: 8192,
@@ -311,63 +603,80 @@
           });
       });
 
-      // Function to display OCR data with positions
-      function displayOCRData(data) {
-        if (!data || !data.length) {
-          ocrViewer.innerHTML = '<div class="p-4">No OCR data available</div>';
-          return;
+      // Add a function to convert full-width characters to half-width
+      function ToCDB(str) {
+        var tmp = "";
+        for (var i = 0; i < str.length; i++) {
+          if (str.charCodeAt(i) == 12288) {
+            tmp += String.fromCharCode(str.charCodeAt(i) - 12256);
+            continue;
+          }
+          if (str.charCodeAt(i) > 65280 && str.charCodeAt(i) < 65375) {
+            tmp += String.fromCharCode(str.charCodeAt(i) - 65248);
+          } else {
+            tmp += String.fromCharCode(str.charCodeAt(i));
+          }
         }
-
-        // Clear previous content
-        ocrViewer.innerHTML = "";
-
-        // Create container for positioned elements
-        const container = document.createElement("div");
-        container.style.position = "relative";
-        container.style.width = "100%";
-        container.style.height = "100%";
-
-        // Calculate dimensions
-        let maxX = 0;
-        let maxY = 0;
-        data.forEach(([coords]) => {
-          coords.forEach(([x, y]) => {
-            maxX = Math.max(maxX, x);
-            maxY = Math.max(maxY, y);
-          });
-        });
-
-        // Set container size
-        container.style.width = maxX + "px";
-        container.style.height = maxY + "px";
-
-        // Create text elements
-        data.forEach(([coords, [text, confidence]], index) => {
-          const element = document.createElement("div");
-          element.textContent = text;
-          element.style.position = "absolute";
-
-          // Calculate position (PaddleOCR coordinates are already in the correct format)
-          const x = (coords[0][0] + coords[1][0]) / 2;
-          const y = (coords[0][1] + coords[2][1]) / 2;
-
-          element.style.left = x + "px";
-          element.style.top = y + "px";
-          element.style.transform = "translate(-50%, -50%)";
-
-          // Styling
-          element.style.padding = "2px 4px";
-          element.style.backgroundColor = `rgba(255, 255, 255, ${confidence})`;
-          element.style.border = "1px solid rgba(0, 0, 0, 0.1)";
-          element.style.borderRadius = "2px";
-          element.style.cursor = "text";
-          element.title = `Confidence: ${(confidence * 100).toFixed(1)}%`;
-
-          container.appendChild(element);
-        });
-
-        ocrViewer.appendChild(container);
+        return tmp;
       }
+
+      // Function to display OCR data with positions
+      // function displayOCRData(data) {
+      //   if (!data || !data.length) {
+      //     ocrViewer.innerHTML = '<div class="p-4">No OCR data available</div>';
+      //     return;
+      //   }
+
+      //   // Clear previous content
+      //   ocrViewer.innerHTML = "";
+
+      //   // Create container for positioned elements
+      //   const container = document.createElement("div");
+      //   container.style.position = "relative";
+      //   container.style.width = "100%";
+      //   container.style.height = "100%";
+
+      //   // Calculate dimensions
+      //   let maxX = 0;
+      //   let maxY = 0;
+      //   data.forEach(([coords]) => {
+      //     coords.forEach(([x, y]) => {
+      //       maxX = Math.max(maxX, x);
+      //       maxY = Math.max(maxY, y);
+      //     });
+      //   });
+
+      //   // Set container size
+      //   container.style.width = maxX + "px";
+      //   container.style.height = maxY + "px";
+
+      //   // Create text elements
+      //   data.forEach(([coords, [text, confidence]], index) => {
+      //     const element = document.createElement("div");
+      //     element.textContent = text;
+      //     element.style.position = "absolute";
+
+      //     // Calculate position (PaddleOCR coordinates are already in the correct format)
+      //     const x = (coords[0][0] + coords[1][0]) / 2;
+      //     const y = (coords[0][1] + coords[2][1]) / 2;
+
+      //     element.style.left = x + "px";
+      //     element.style.top = y + "px";
+      //     element.style.transform = "translate(-50%, -50%)";
+
+      //     // Styling
+      //     element.style.padding = "2px 4px";
+      //     element.style.backgroundColor = `rgba(255, 255, 255, ${confidence})`;
+      //     element.style.border = "1px solid rgba(0, 0, 0, 0.1)";
+      //     element.style.borderRadius = "2px";
+      //     element.style.cursor = "text";
+      //     element.title = `Confidence: ${(confidence * 100).toFixed(1)}%`;
+
+      //     container.appendChild(element);
+      //   });
+
+      //   ocrViewer.appendChild(container);
+      // }
     </script>
   </body>
 </html>

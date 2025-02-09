@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import os
 from paddleocr import PaddleOCR
@@ -8,6 +9,7 @@ import logging
 import numpy as np
 
 app = Flask(__name__)
+CORS(app)
 
 # Configure logging
 LOG_FILE = 'ocr_app.log'
@@ -138,7 +140,7 @@ from openai import OpenAI
 
 # Initialize OpenAI client with local endpoint
 client = OpenAI(
-    base_url="http://localhost:5000/v1",  # Local OpenAI-compatible API endpoint
+    base_url="http://10.0.0.100:5000/v1",  # Local OpenAI-compatible API endpoint
     api_key="not-needed"  # API key can be any string since we're using local server
 )
 
@@ -282,276 +284,8 @@ def analyze_endpoint():
         logger.error(f"Analysis error: {str(e)}")
         return jsonify({'error': 'Failed to analyze text'}), 500
 
-# HTML template (create templates/index.html)
-HTML_TEMPLATE = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OCR Analyzer</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="min-h-screen bg-gray-50 p-4">
-    <div class="grid grid-cols-3 gap-4">
-        <!-- File Upload Section -->
-        <div class="col-span-1">
-            <div class="bg-white p-4 rounded-lg shadow">
-                <h2 class="text-lg font-semibold mb-4">Document Upload</h2>
-                <form id="upload-form">
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                        <input type="file" id="file-upload" accept=".jpg,.jpeg,.png,.pdf" class="hidden">
-                        <label for="file-upload" class="cursor-pointer text-blue-500 hover:text-blue-600">
-                            <p>Click to upload or drag and drop</p>
-                            <p class="text-sm text-gray-500">PDF or Images</p>
-                        </label>
-                    </div>
-                </form>
-                <div id="upload-status" class="mt-4 text-center hidden">
-                    <p class="text-blue-500">Processing document...</p>
-                </div>
-                
-                <!-- Image Preview Section -->
-                <div id="preview-section" class="mt-4 hidden">
-                    <h3 class="text-lg font-semibold mb-2">Preview</h3>
-                    <div class="relative border rounded-lg p-2 bg-white">
-                        <div class="overflow-auto" style="max-height: 400px;">
-                            <div id="preview-container" class="relative">
-                                <img id="preview-image" class="max-w-full transition-transform duration-200" src="" alt="Preview">
-                            </div>
-                        </div>
-                        <div class="mt-2 flex justify-center gap-4 items-center">
-                            <button id="zoom-out" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300">
-                                <span class="text-lg">−</span>
-                            </button>
-                            <span id="zoom-level" class="px-3 py-1 bg-gray-100 rounded">100%</span>
-                            <button id="zoom-in" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300">
-                                <span class="text-lg">+</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- OCR Results Section -->
-        <div class="col-span-1">
-            <div class="bg-white p-4 rounded-lg shadow">
-                <h2 class="text-lg font-semibold mb-4">OCR Results</h2>
-                <textarea id="ocr-results" class="w-full h-32 p-2 border border-gray-300 rounded mb-2" readonly></textarea>
-                <div id="ocr-viewer" class="border border-gray-200 rounded h-96 overflow-auto"></div>
-            </div>
-        </div>
-
-        <!-- AI Analysis Section -->
-        <div class="col-span-1">
-            <div class="bg-white p-4 rounded-lg shadow">
-                <h2 class="text-lg font-semibold mb-4">AI Analysis</h2>
-                <button id="analyze-btn" class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 mb-4" disabled>
-                    Analyze Text
-                </button>
-                <textarea id="analysis-results" class="w-full h-96 p-2 border border-gray-300 rounded" readonly></textarea>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // File upload handling
-        const uploadForm = document.getElementById('upload-form');
-        const fileInput = document.getElementById('file-upload');
-        const ocrResults = document.getElementById('ocr-results');
-        const ocrViewer = document.getElementById('ocr-viewer');
-        const analyzeBtn = document.getElementById('analyze-btn');
-        const analysisResults = document.getElementById('analysis-results');
-        const uploadStatus = document.getElementById('upload-status');
-
-        // Preview and zoom functionality
-        const previewSection = document.getElementById('preview-section');
-        const previewImage = document.getElementById('preview-image');
-        const zoomInBtn = document.getElementById('zoom-in');
-        const zoomOutBtn = document.getElementById('zoom-out');
-        const zoomLevelSpan = document.getElementById('zoom-level');
-        let currentZoom = 100;
-
-        function updateZoom() {
-            previewImage.style.transform = `scale(${currentZoom / 100})`;
-            previewImage.style.transformOrigin = 'top left';
-            zoomLevelSpan.textContent = `${currentZoom}%`;
-        }
-
-        zoomInBtn.addEventListener('click', () => {
-            currentZoom = Math.min(currentZoom + 25, 300);
-            updateZoom();
-        });
-
-        zoomOutBtn.addEventListener('click', () => {
-            currentZoom = Math.max(currentZoom - 25, 25);
-            updateZoom();
-        });
-
-        fileInput.addEventListener('change', async (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            // Show preview for image files
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    previewImage.src = e.target.result;
-                    previewSection.classList.remove('hidden');
-                    currentZoom = 100;
-                    updateZoom();
-                };
-                reader.readAsDataURL(file);
-            } else {
-                previewSection.classList.add('hidden');
-            }
-
-            // Create FormData
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                // Show loading state
-                uploadStatus.classList.remove('hidden');
-                ocrResults.value = 'Processing...';
-                ocrViewer.innerHTML = '<div class="p-4">Processing document...</div>';
-                analyzeBtn.disabled = true;
-
-                // Send file to OCR endpoint
-                const response = await fetch('/api/ocr', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error('OCR processing failed');
-                }
-
-                const result = await response.json();
-                
-                // Display raw text
-                ocrResults.value = result.raw;
-
-                // Display structured OCR data
-                displayOCRData(result.data);
-
-                // Enable analyze button
-                analyzeBtn.disabled = false;
-
-            } catch (error) {
-                console.error('Upload error:', error);
-                ocrResults.value = 'Error processing file. Please try again.';
-                ocrViewer.innerHTML = '<div class="p-4 text-red-500">Error processing document</div>';
-            } finally {
-                uploadStatus.classList.add('hidden');
-            }
-        });
-
-        // Handle AI analysis
-        analyzeBtn.addEventListener('click', async () => {
-            const text = ocrResults.value;
-            if (!text) return;
-
-            try {
-                // Show loading state
-                analyzeBtn.disabled = true;
-                analyzeBtn.textContent = 'Analyzing...';
-                analysisResults.value = 'Processing...';
-
-                // Send text for analysis
-                const response = await fetch('/api/analyze', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ text })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Analysis failed');
-                }
-
-                const result = await response.json();
-                analysisResults.value = result.analysis;
-
-            } catch (error) {
-                console.error('Analysis error:', error);
-                analysisResults.value = 'Error analyzing text. Please try again.';
-            } finally {
-                analyzeBtn.disabled = false;
-                analyzeBtn.textContent = 'Analyze Text';
-            }
-        });
-
-        // Function to display OCR data with positions
-        function displayOCRData(data) {
-            if (!data || !data.length) {
-                ocrViewer.innerHTML = '<div class="p-4">No OCR data available</div>';
-                return;
-            }
-
-            // Clear previous content
-            ocrViewer.innerHTML = '';
-
-            // Create container for positioned elements
-            const container = document.createElement('div');
-            container.style.position = 'relative';
-            container.style.width = '100%';
-            container.style.height = '100%';
-
-            // Calculate dimensions
-            let maxX = 0;
-            let maxY = 0;
-            data.forEach(([coords]) => {
-                coords.forEach(([x, y]) => {
-                    maxX = Math.max(maxX, x);
-                    maxY = Math.max(maxY, y);
-                });
-            });
-
-            // Set container size
-            container.style.width = maxX + 'px';
-            container.style.height = maxY + 'px';
-
-            // Create text elements
-            data.forEach(([coords, [text, confidence]], index) => {
-                const element = document.createElement('div');
-                element.textContent = text;
-                element.style.position = 'absolute';
-                
-                // Calculate position (PaddleOCR coordinates are already in the correct format)
-                const x = (coords[0][0] + coords[1][0]) / 2;
-                const y = (coords[0][1] + coords[2][1]) / 2;
-                
-                element.style.left = x + 'px';
-                element.style.top = y + 'px';
-                element.style.transform = 'translate(-50%, -50%)';
-                
-                // Styling
-                element.style.padding = '2px 4px';
-                element.style.backgroundColor = `rgba(255, 255, 255, ${confidence})`;
-                element.style.border = '1px solid rgba(0, 0, 0, 0.1)';
-                element.style.borderRadius = '2px';
-                element.style.cursor = 'text';
-                element.title = `Confidence: ${(confidence * 100).toFixed(1)}%`;
-                
-                container.appendChild(element);
-            });
-
-            ocrViewer.appendChild(container);
-        }
-    </script>
-</body>
-</html>
-"""
-
 if __name__ == '__main__':
-    # Save the HTML template
-    os.makedirs('templates', exist_ok=True)
-    with open('templates/index.html', 'w') as f:
-        f.write(HTML_TEMPLATE)
-    
+
     # Run the application
     app.run(
         host='0.0.0.0',
