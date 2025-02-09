@@ -238,35 +238,57 @@ def ocr_endpoint():
         preview_path = None
         if filename.lower().endswith('.pdf'):
             try:
-                logger.info("Converting PDF to image for preview")
+                logger.info("Converting PDF to images")
                 images = pdf2image.convert_from_path(filepath)
                 logger.info(f"Converted {len(images)} pages")
-
+                
                 pages_data = []
-                if images:
-                    preview_path = os.path.join(upload_dir, f"{os.path.splitext(filename)[0]}_preview.jpg")
-                    images[0].save(preview_path, 'JPEG')
-                    logger.info(f"Preview saved to: {preview_path}")
+                for i, image in enumerate(images):
+                    page_num = i + 1
+                    preview_path = os.path.join(upload_dir, f"{os.path.splitext(filename)[0]}_page_{page_num}.jpg")
+                    logger.info(f"Saving page {page_num} preview to: {preview_path}")
+                    image.save(preview_path, 'JPEG')
                     
-                    # Convert preview to base64 for response
+                    # Convert preview to base64
                     with open(preview_path, 'rb') as img_file:
                         preview_data = base64.b64encode(img_file.read()).decode('utf-8')
+                    
+                    # Process OCR for this page
+                    structured_data, raw_text = OCRProcessor.process_image(preview_path)
+                    
+                    pages_data.append({
+                        'page': page_num,
+                        'preview': f"data:image/jpeg;base64,{preview_data}",
+                        'data': structured_data,
+                        'raw': raw_text
+                    })
                 
-                # Use first page for OCR
-                temp_image_path = os.path.join(app.config['UPLOAD_FOLDER'], 'temp.jpg')
-                images[0].save(temp_image_path, 'JPEG')
-                structured_data, raw_text = OCRProcessor.process_image(temp_image_path)
-                os.remove(temp_image_path)
+                logger.info(f"Processed {len(pages_data)} pages")
+                return jsonify({
+                    'isPdf': True,
+                    'totalPages': len(pages_data),
+                    'pages': pages_data
+                })
                 
             except Exception as pdf_error:
                 logger.error(f"PDF processing error: {str(pdf_error)}")
                 return jsonify({'error': str(pdf_error)}), 500
         else:
-            # For images, use as-is
+            # For single images
             structured_data, raw_text = OCRProcessor.process_image(filepath)
-            # Convert image to base64 for preview
             with open(filepath, 'rb') as img_file:
                 preview_data = base64.b64encode(img_file.read()).decode('utf-8')
+            
+            return jsonify({
+                'isPdf': False,
+                'totalPages': 1,
+                'pages': [{
+                    'page': 1,
+                    'preview': f"data:image/jpeg;base64,{preview_data}",
+                    'data': structured_data,
+                    'raw': raw_text
+                }]
+            })
 
         # Clean up uploaded files if not keeping them
         if not KEEP_FILES:

@@ -78,6 +78,29 @@
               </div>
             </div>
           </div>
+          <!-- Add page navigation controls after preview section -->
+          <div
+            id="page-nav"
+            class="mt-2 flex justify-center gap-4 items-center hidden"
+          >
+            <button
+              id="prev-page"
+              class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
+              disabled
+            >
+              Previous
+            </button>
+            <span id="page-info" class="px-3 py-1 bg-gray-100 rounded"
+              >Page 1 of 1</span
+            >
+            <button
+              id="next-page"
+              class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
+              disabled
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
 
@@ -213,6 +236,15 @@
       let selectedLines = new Set();
       let processedLines = new Set(); // Track processed lines
 
+      // Add these to your existing variables
+      const pageNav = document.getElementById("page-nav");
+      const prevPageBtn = document.getElementById("prev-page");
+      const nextPageBtn = document.getElementById("next-page");
+      const pageInfo = document.getElementById("page-info");
+
+      let currentPage = 1;
+      let pagesData = [];
+
       fileInput.addEventListener("change", async (event) => {
         const file = event.target.files[0];
         console.log("File selected:", file);
@@ -263,6 +295,9 @@
 
           const result = await response.json();
 
+          // Store pages data
+          pagesData = result.pages;
+
           // Show preview (for both PDF and images)
           if (result.preview) {
             previewImage.src = result.preview;
@@ -271,11 +306,17 @@
             updateZoom();
           }
 
+          // Show preview and navigation for first page
+          previewSection.classList.remove("hidden");
+          currentPage = 1;
+          updatePageNavigation(result.totalPages);
+          displayPage(1);
+
           // Display raw text
           //ocrResults.value = result.raw;
 
           // Display structured OCR data
-          displayOCRResults(result.raw);
+          //displayOCRResults(result.raw);
 
           // not to display the coordinates
           //displayOCRData(result.data);
@@ -289,6 +330,50 @@
           //  '<div class="p-4 text-red-500">Error processing document</div>';
         } finally {
           uploadStatus.classList.add("hidden");
+        }
+      });
+
+      // Add page navigation handling
+      function updatePageNavigation(totalPages) {
+        if (totalPages > 1) {
+          pageNav.classList.remove("hidden");
+          updatePageButtons();
+        } else {
+          pageNav.classList.add("hidden");
+        }
+      }
+
+      function updatePageButtons() {
+        prevPageBtn.disabled = currentPage === 1;
+        nextPageBtn.disabled = currentPage === pagesData.length;
+        pageInfo.textContent = `Page ${currentPage} of ${pagesData.length}`;
+      }
+
+      function displayPage(pageNum) {
+        const pageData = pagesData[pageNum - 1];
+        console.log(`Displaying page ${pageNum}`);
+
+        // Update preview
+        previewImage.src = pageData.preview;
+
+        // Update OCR results
+        displayOCRResults(pageData.raw);
+        //displayOCRData(pageData.data);
+
+        // Update navigation
+        currentPage = pageNum;
+        updatePageButtons();
+      }
+
+      prevPageBtn.addEventListener("click", () => {
+        if (currentPage > 1) {
+          displayPage(currentPage - 1);
+        }
+      });
+
+      nextPageBtn.addEventListener("click", () => {
+        if (currentPage < pagesData.length) {
+          displayPage(currentPage + 1);
         }
       });
 
