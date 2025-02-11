@@ -1,28 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OCR Analyzer</title>
+    <meta name="description" content="医疗报告OCR分析工具" />
+    <title>医疗报告OCR分析工具</title>
+
+    <!-- External CSS -->
     <link
+      rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
     />
-    <!-- Add Tailwind Typography for markdown styling -->
     <link
-      href="https://cdn.jsdelivr.net/npm/@tailwindcss/typography@0.5.0/dist/typography.min.css"
       rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@tailwindcss/typography@0.5.0/dist/typography.min.css"
     />
-    <!-- Add marked library for markdown parsing -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="static/css/main.css" />
   </head>
   <body class="min-h-screen bg-gray-50 p-4">
+    <!-- Main Grid Layout -->
     <div class="grid grid-cols-3 gap-4">
-      <!-- File Upload Section -->
-      <div class="col-span-1">
+      <!-- Left Column: File Upload & Preview -->
+      <section id="upload-section" class="col-span-1">
+        <!-- File Upload Component -->
         <div class="bg-white p-4 rounded-lg shadow">
-          <h2 class="text-lg font-semibold mb-4">上传文件</h2>
+          <!-- Component Header -->
+          <header class="mb-4">
+            <h2 class="text-lg font-semibold">上传文件</h2>
+          </header>
+
+          <!-- Upload Form -->
           <form id="upload-form">
+            <!-- Upload Drop Zone -->
             <div
               class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center"
             >
@@ -36,33 +47,45 @@
                 for="file-upload"
                 class="cursor-pointer text-blue-500 hover:text-blue-600"
               >
-                <p>Click to upload or drag and drop</p>
-                <p class="text-sm text-gray-500">PDF or Images</p>
+                <p>点击或拖拽上传文件</p>
+                <p class="text-sm text-gray-500">支持 PDF 或图片格式</p>
               </label>
             </div>
           </form>
+
+          <!-- Upload Status -->
           <div id="upload-status" class="mt-4 text-center hidden">
-            <p class="text-blue-500">Processing document...</p>
+            <p class="text-blue-500">正在处理文档...</p>
           </div>
 
-          <!-- Image Preview Section -->
+          <!-- Preview Section -->
           <div id="preview-section" class="mt-4 hidden">
-            <h3 class="text-lg font-semibold mb-2">预览</h3>
+            <!-- Preview Header -->
+            <header class="mb-2">
+              <h3 class="text-lg font-semibold">预览</h3>
+            </header>
+
+            <!-- Preview Container -->
             <div class="relative border rounded-lg p-2 bg-white">
-              <div class="overflow-auto" style="max-height: 400px">
+              <div
+                class="overflow-auto custom-scrollbar"
+                style="max-height: 400px"
+              >
                 <div id="preview-container" class="relative">
                   <img
                     id="preview-image"
                     class="max-w-full transition-transform duration-200"
                     src=""
-                    alt="Preview"
+                    alt="文档预览"
                   />
                 </div>
               </div>
+
+              <!-- Zoom Controls -->
               <div class="mt-2 flex justify-center gap-4 items-center">
                 <button
                   id="zoom-out"
-                  class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
+                  class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   <span class="text-lg">−</span>
                 </button>
@@ -71,50 +94,53 @@
                 >
                 <button
                   id="zoom-in"
-                  class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
+                  class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   <span class="text-lg">+</span>
                 </button>
               </div>
             </div>
-          </div>
-          <!-- Add page navigation controls after preview section -->
-          <div
-            id="page-nav"
-            class="mt-2 flex justify-center gap-4 items-center hidden"
-          >
-            <button
-              id="prev-page"
-              class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
-              disabled
+
+            <!-- Page Navigation -->
+            <div
+              id="page-nav"
+              class="mt-2 flex justify-center gap-4 items-center hidden"
             >
-              Previous
-            </button>
-            <span id="page-info" class="px-3 py-1 bg-gray-100 rounded"
-              >Page 1 of 1</span
-            >
-            <button
-              id="next-page"
-              class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
-              disabled
-            >
-              Next
-            </button>
+              <button
+                id="prev-page"
+                class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                上一页
+              </button>
+              <span id="page-info" class="px-3 py-1 bg-gray-100 rounded"
+                >第 1 页，共 1 页</span
+              >
+              <button
+                id="next-page"
+                class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                下一页
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Replace the OCR Results Section in your HTML -->
-      <div class="col-span-1">
+      <!-- Middle Column: OCR Results -->
+      <section id="ocr-section" class="col-span-1">
         <div class="bg-white p-4 rounded-lg shadow">
-          <h2 class="text-lg font-semibold mb-4">原始扫描结果</h2>
-          <!-- Replace textarea with selectable lines -->
+          <!-- OCR Results Header -->
+          <header class="mb-4">
+            <h2 class="text-lg font-semibold">原始扫描结果</h2>
+          </header>
+
+          <!-- OCR Results Display -->
           <div
             id="ocr-results"
-            class="w-full h-48 p-2 border border-gray-300 rounded mb-2 overflow-auto"
-          >
-            <!-- Lines will be inserted here -->
-          </div>
+            class="w-full h-48 p-2 border border-gray-300 rounded mb-2 overflow-auto custom-scrollbar"
+          ></div>
+
+          <!-- Process Button -->
           <div class="mb-2">
             <button
               id="process-btn"
@@ -125,33 +151,57 @@
             </button>
           </div>
 
-          <!-- Add Key-Value Display -->
+          <!-- Processed Results -->
           <div class="mb-2">
             <h3 class="text-md font-semibold mb-2">复核后结果</h3>
             <div
               id="kv-display"
-              class="w-full border border-gray-300 rounded p-2 h-96 overflow-auto"
-            >
-              <!-- Key-value pairs will be displayed here -->
-            </div>
+              class="w-full border border-gray-300 rounded p-2 h-96 overflow-auto custom-scrollbar"
+            ></div>
           </div>
-
-          <!--<div
-            id="ocr-viewer"
-            class="border border-gray-200 rounded h-48 overflow-auto"
-          ></div>-->
         </div>
-      </div>
+      </section>
 
-      <!-- Add Modal for Key Input -->
-      <div
-        id="key-input-modal"
-        class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center"
-      >
-        <div class="bg-white p-4 rounded-lg shadow-lg">
-          <h3 class="text-lg font-semibold mb-4">复核确认</h3>
+      <!-- Right Column: AI Analysis -->
+      <section id="analysis-section" class="col-span-1">
+        <div class="bg-white p-4 rounded-lg shadow">
+          <!-- Analysis Header -->
+          <header class="mb-4">
+            <h2 class="text-lg font-semibold">人工智能错误分析</h2>
+          </header>
+
+          <!-- Analysis Controls -->
+          <button
+            id="analyze-btn"
+            class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 mb-4 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            disabled
+          >
+            分析文本
+          </button>
+
+          <!-- Analysis Results -->
+          <div
+            id="analysis-results"
+            class="w-full h-96 p-4 border border-gray-300 rounded overflow-auto prose prose-sm max-w-none custom-scrollbar"
+          ></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Modal Component -->
+    <div
+      id="key-input-modal"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center"
+    >
+      <div class="bg-white p-4 rounded-lg shadow-lg">
+        <header class="mb-4">
+          <h3 class="text-lg font-semibold">复核确认</h3>
+        </header>
+
+        <!-- Modal Content -->
+        <div class="mb-4">
           <p class="mb-2">
-            Selected text:
+            已选择文本:
             <span id="modal-selected-text" class="font-mono text-sm"></span>
           </p>
           <input
@@ -166,618 +216,35 @@
             class="w-full p-2 border border-gray-300 rounded mb-4"
             placeholder="输入内容"
           />
-          <div class="flex justify-end gap-2">
-            <button
-              id="modal-cancel"
-              class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
-            >
-              Cancel
-            </button>
-            <button
-              id="modal-save"
-              class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Save
-            </button>
-          </div>
         </div>
-      </div>
 
-      <!-- AI Analysis Section -->
-      <div class="col-span-1">
-        <div class="bg-white p-4 rounded-lg shadow">
-          <h2 class="text-lg font-semibold mb-4">人工智能错误分析</h2>
+        <!-- Modal Actions -->
+        <div class="flex justify-end gap-2">
           <button
-            id="analyze-btn"
-            class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 mb-4"
-            disabled
+            id="modal-cancel"
+            class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
           >
-            分析文本
+            取消
           </button>
-          <div
-            id="analysis-results"
-            class="w-full h-96 p-4 border border-gray-300 rounded overflow-auto prose prose-sm max-w-none"
+          <button
+            id="modal-save"
+            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            <!-- Analysis content will be inserted here -->
-          </div>
+            保存
+          </button>
         </div>
       </div>
     </div>
 
-    <script>
-      // File upload handling
-      let controller = null; // Store the AbortController instance
-      const uploadForm = document.getElementById("upload-form");
-      const fileInput = document.getElementById("file-upload");
-      const ocrResults = document.getElementById("ocr-results");
-      //const ocrViewer = document.getElementById("ocr-viewer");
-      const analyzeBtn = document.getElementById("analyze-btn");
-      const uploadStatus = document.getElementById("upload-status");
-
-      // Preview elements
-      const previewSection = document.getElementById("preview-section");
-      const previewImage = document.getElementById("preview-image");
-      const zoomInBtn = document.getElementById("zoom-in");
-      const zoomOutBtn = document.getElementById("zoom-out");
-      const zoomLevelSpan = document.getElementById("zoom-level");
-      let currentZoom = 100;
-
-      // Add these after your existing const declarations
-      const keyValueMap = new Map();
-      const modal = document.getElementById("key-input-modal");
-      const modalSelectedText = document.getElementById("modal-selected-text");
-      const keyInput = document.getElementById("key-input");
-      const valueInput = document.getElementById("value-input");
-      const modalSave = document.getElementById("modal-save");
-      const modalCancel = document.getElementById("modal-cancel");
-      const kvDisplay = document.getElementById("kv-display");
-
-      const processBtn = document.getElementById("process-btn");
-      let selectedLines = new Set();
-      let processedLines = new Set(); // Track processed lines
-
-      // Add these to your existing variables
-      const pageNav = document.getElementById("page-nav");
-      const prevPageBtn = document.getElementById("prev-page");
-      const nextPageBtn = document.getElementById("next-page");
-      const pageInfo = document.getElementById("page-info");
-
-      let currentPage = 1;
-      let pagesData = [];
-
-      fileInput.addEventListener("change", async (event) => {
-        const file = event.target.files[0];
-        console.log("File selected:", file);
-        if (!file) return;
-
-        // Check file size (100MB in bytes)
-        const MAX_SIZE = 100 * 1024 * 1024;
-        if (file.size > MAX_SIZE) {
-          alert("File is too large. Maximum size is 100MB.");
-          fileInput.value = ""; // Clear the input
-          return;
-        }
-
-        // Show preview for image files
-        if (file.type.startsWith("image/")) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            previewImage.src = e.target.result;
-            previewSection.classList.remove("hidden");
-            currentZoom = 100;
-            updateZoom();
-          };
-          reader.readAsDataURL(file);
-        } else {
-          previewSection.classList.add("hidden");
-        }
-
-        // Create FormData
-        const formData = new FormData();
-        formData.append("file", file);
-
-        try {
-          // Show loading state
-          uploadStatus.classList.remove("hidden");
-          ocrResults.value = "Processing...";
-          //ocrViewer.innerHTML = '<div class="p-4">Processing document...</div>';
-          analyzeBtn.disabled = true;
-
-          // Send file to OCR endpoint
-          const response = await fetch("/api/ocr", {
-            method: "POST",
-            body: formData,
-          });
-
-          if (!response.ok) {
-            throw new Error("OCR processing failed");
-          }
-
-          const result = await response.json();
-
-          // Store pages data
-          pagesData = result.pages;
-
-          // Show preview (for both PDF and images)
-          if (result.preview) {
-            previewImage.src = result.preview;
-            previewSection.classList.remove("hidden");
-            currentZoom = 100;
-            updateZoom();
-          }
-
-          // Show preview and navigation for first page
-          previewSection.classList.remove("hidden");
-          currentPage = 1;
-          updatePageNavigation(result.totalPages);
-          displayPage(1);
-
-          // Display raw text
-          //ocrResults.value = result.raw;
-
-          // Display structured OCR data
-          //displayOCRResults(result.raw);
-
-          // not to display the coordinates
-          //displayOCRData(result.data);
-
-          // Enable analyze button
-          analyzeBtn.disabled = false;
-        } catch (error) {
-          console.error("Upload error:", error);
-          ocrResults.value = "Error processing file. Please try again.";
-          //ocrViewer.innerHTML =
-          //  '<div class="p-4 text-red-500">Error processing document</div>';
-        } finally {
-          uploadStatus.classList.add("hidden");
-        }
-      });
-
-      // Add page navigation handling
-      function updatePageNavigation(totalPages) {
-        if (totalPages > 1) {
-          pageNav.classList.remove("hidden");
-          updatePageButtons();
-        } else {
-          pageNav.classList.add("hidden");
-        }
-      }
-
-      function updatePageButtons() {
-        prevPageBtn.disabled = currentPage === 1;
-        nextPageBtn.disabled = currentPage === pagesData.length;
-        pageInfo.textContent = `Page ${currentPage} of ${pagesData.length}`;
-      }
-
-      function displayPage(pageNum) {
-        const pageData = pagesData[pageNum - 1];
-        console.log(`Displaying page ${pageNum}`);
-
-        // Update preview
-        previewImage.src = pageData.preview;
-
-        // Update OCR results
-        displayOCRResults(pageData.raw);
-        //displayOCRData(pageData.data);
-
-        // Update navigation
-        currentPage = pageNum;
-        updatePageButtons();
-      }
-
-      prevPageBtn.addEventListener("click", () => {
-        if (currentPage > 1) {
-          displayPage(currentPage - 1);
-        }
-      });
-
-      nextPageBtn.addEventListener("click", () => {
-        if (currentPage < pagesData.length) {
-          displayPage(currentPage + 1);
-        }
-      });
-
-      // Zoom functionality
-      function updateZoom() {
-        previewImage.style.transform = `scale(${currentZoom / 100})`;
-        previewImage.style.transformOrigin = "top left";
-        zoomLevelSpan.textContent = `${currentZoom}%`;
-
-        // Enable/disable zoom buttons based on limits
-        zoomOutBtn.disabled = currentZoom <= 25;
-        zoomInBtn.disabled = currentZoom >= 300;
-      }
-
-      zoomInBtn.addEventListener("click", () => {
-        currentZoom = Math.min(currentZoom + 25, 300);
-        updateZoom();
-      });
-
-      zoomOutBtn.addEventListener("click", () => {
-        currentZoom = Math.max(currentZoom - 25, 25);
-        updateZoom();
-      });
-
-      // display scanned text
-      function displayOCRResults(raw) {
-        console.log("displayOCRResults input type:", typeof raw);
-        console.log("displayOCRResults input:", raw);
-
-        if (!raw || typeof raw !== "string") {
-          console.error("Invalid input to displayOCRResults:", raw);
-          ocrResults.innerHTML =
-            '<div class="p-4 text-red-500">Invalid OCR result format</div>';
-          return;
-        }
-
-        const lines = raw.split("\n");
-        console.log("Number of lines:", lines.length);
-
-        ocrResults.innerHTML = lines
-          .map((line, index) => {
-            const trimmedLine = ToCDB(line.trim());
-            console.log(`Line ${index}:`, trimmedLine);
-            return trimmedLine
-              ? `
-                    <div class="ocr-line p-1 hover:bg-gray-100 cursor-pointer select-none" 
-                         data-index="${index}">
-                        ${trimmedLine}
-                    </div>
-                `
-              : "";
-          })
-          .join("");
-
-        const lineElements = ocrResults.querySelectorAll(".ocr-line");
-        console.log("Created line elements:", lineElements.length);
-
-        lineElements.forEach((line) => {
-          line.addEventListener("click", (e) => {
-            console.log("Line clicked:", line.textContent);
-
-            // Skip if already processed
-            if (processedLines.has(line.dataset.index)) {
-              console.log("Skipping processed line");
-              return;
-            }
-
-            if (e.shiftKey && lastSelected) {
-              // Shift+Click for range selection
-              const start = Array.from(lineElements).indexOf(lastSelected);
-              const end = Array.from(lineElements).indexOf(line);
-              const range = Array.from(lineElements).slice(
-                Math.min(start, end),
-                Math.max(start, end) + 1
-              );
-              // Filter out processed lines
-              selectedLines = new Set(
-                range.filter((l) => !processedLines.has(l.dataset.index))
-              );
-              lineElements.forEach((l) => {
-                if (!processedLines.has(l.dataset.index)) {
-                  l.classList.remove("bg-blue-100");
-                }
-              });
-              Array.from(selectedLines).forEach((l) =>
-                l.classList.add("bg-blue-100")
-              );
-            } else if (e.ctrlKey || e.metaKey) {
-              // Ctrl/Cmd+Click for multi-select
-              if (!processedLines.has(line.dataset.index)) {
-                line.classList.toggle("bg-blue-100");
-                if (line.classList.contains("bg-blue-100")) {
-                  selectedLines.add(line);
-                } else {
-                  selectedLines.delete(line);
-                }
-                lastSelected = line;
-              }
-            } else {
-              // Normal click for single select
-              lineElements.forEach((l) => {
-                if (!processedLines.has(l.dataset.index)) {
-                  l.classList.remove("bg-blue-100");
-                }
-              });
-              if (!processedLines.has(line.dataset.index)) {
-                line.classList.add("bg-blue-100");
-                selectedLines = new Set([line]);
-                lastSelected = line;
-              }
-            }
-
-            // Enable/disable process button based on selection
-            processBtn.disabled = selectedLines.size === 0;
-            console.log("Selected lines:", selectedLines.size);
-          });
-        });
-      }
-
-      // select scanned text and confirm key-value pair
-      function processSelection(selectedLines) {
-        // Convert to array and clean each line
-        const cleanedText = Array.from(selectedLines)
-          .map(
-            (line) =>
-              line.textContent
-                .trim() // Remove leading/trailing spaces
-                .replace(/\n/g, "") // Remove any newline characters
-          )
-          .join("") // Join without adding newlines
-          .trim(); // Final trim to ensure no extra spaces
-
-        console.log("Cleaned text:", JSON.stringify(cleanedText));
-
-        modalSelectedText.textContent = cleanedText;
-        keyInput.value = cleanedText.includes(":")
-          ? cleanedText.split(":")[0].trim()
-          : "";
-        valueInput.value = cleanedText.includes(":")
-          ? cleanedText.split(":")[1].trim()
-          : cleanedText;
-        modal.classList.remove("hidden");
-        keyInput.focus();
-      }
-      // Add process button handler
-      processBtn.addEventListener("click", () => {
-        if (selectedLines.size > 0) {
-          processSelection(selectedLines);
-        }
-      });
-
-      // Update modal save handler
-      modalSave.addEventListener("click", () => {
-        const key = keyInput.value.trim();
-        if (key) {
-          let value = valueInput.value.trim();
-          keyValueMap.set(key, value);
-          updateKVDisplay();
-          modal.classList.add("hidden");
-
-          // Mark selected lines as processed
-          selectedLines.forEach((line) => {
-            processedLines.add(line.dataset.index);
-            line.classList.remove("bg-blue-100");
-            line.classList.add("bg-gray-300");
-          });
-
-          // Clear selection and disable process button
-          selectedLines.clear();
-          processBtn.disabled = true;
-        } else {
-          alert("Please enter a field name");
-        }
-      });
-
-      // Add modal handlers
-      modalCancel.addEventListener("click", () => {
-        modal.classList.add("hidden");
-      });
-
-      // after user selects lines and confirms key-value pair, add the key-value pair to the display
-      function updateKVDisplay() {
-        kvDisplay.innerHTML = Array.from(keyValueMap.entries())
-          .map(
-            ([key, value]) => `
-            <div class="flex gap-2 mb-1 p-1 hover:bg-gray-50">
-                <span class="font-semibold min-w-[100px]">${key}:</span>
-                <span class="flex-1">${value}</span>
-                <button 
-                    class="remove-kv px-2 text-red-500 hover:bg-red-50 rounded" 
-                    data-key="${key}"
-                >
-                    ×
-                </button>
-            </div>
-        `
-          )
-          .join("");
-
-        // Add click handlers for remove buttons
-        kvDisplay.querySelectorAll(".remove-kv").forEach((btn) => {
-          btn.addEventListener("click", (e) => {
-            const key = e.target.dataset.key;
-            keyValueMap.delete(key);
-
-            // Unmark the processed lines for this key-value pair
-            // Convert processed lines back to selectable
-            const lineElements = document.querySelectorAll(".ocr-line");
-            lineElements.forEach((line) => {
-              if (line.textContent.includes(key)) {
-                const index = line.dataset.index;
-                processedLines.delete(index);
-                line.classList.remove("bg-gray-300");
-              }
-            });
-
-            updateKVDisplay();
-          });
-        });
-      }
-
-      // Handle AI analysis with streaming
-      analyzeBtn.addEventListener("click", () => {
-        // Get text from all OCR lines instead of textarea value
-
-        // get text from kvDisplay
-        const text = kvDisplay.textContent;
-
-        // const text = Array.from(
-        //   document.querySelectorAll("#ocr-results .ocr-line")
-        // )
-        //   .map((line) => line.textContent.trim())
-        //   .join("\n");
-        // console.log("Analyze text:", text);
-        // if (!text) {
-        //   console.log("No text to analyze");
-
-        //   return;
-        // }
-
-        // Disable the generate button and enable the stop button
-        analyzeBtn.disabled = true;
-        analyzeBtn.textContent = "Analyzing...";
-        const analysisResults = document.getElementById("analysis-results");
-        analysisResults.innerHTML = "";
-
-        // Create a new AbortController instance
-        controller = new AbortController();
-        const signal = controller.signal;
-
-        fetch("http://10.0.0.100:5000/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer not-needed",
-          },
-          body: JSON.stringify({
-            model: "any-model",
-            messages: [
-              {
-                role: "system",
-                content: "你是一个有经验的医生",
-              },
-              {
-                role: "user",
-                content: `基于报告扫描的内容，请仔细检查确认报告是正确的，没有错误用语，错别字，特别是医学用语和药品名称。报告首先给个整体的结果，是否有错误。具体的错误请用红色标示\n\nOCR Text:\n${text}`,
-              },
-            ],
-            max_tokens: 8192,
-            stream: true,
-          }),
-          signal,
-        })
-          .then(async (response) => {
-            if (!response.ok) throw new Error(response.statusText);
-
-            // Read the response as a stream of data
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let accumulatedText = "";
-
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) {
-                break;
-              }
-
-              // Decode the chunk
-              const chunk = decoder.decode(value);
-              const lines = chunk.split("\n");
-
-              // Process each line
-              for (const line of lines) {
-                if (line.trim() === "") continue;
-                if (line.trim() === "data: [DONE]") continue;
-                if (!line.startsWith("data: ")) continue;
-
-                // Parse the JSON response
-                try {
-                  const json = JSON.parse(line.replace("data: ", ""));
-                  if (json.choices[0].delta?.content) {
-                    accumulatedText += json.choices[0].delta.content;
-                    // Parse markdown and update the display
-                    analysisResults.innerHTML = marked.parse(accumulatedText);
-                    // Scroll to bottom
-                    analysisResults.scrollTop = analysisResults.scrollHeight;
-                  }
-                } catch (err) {
-                  console.error("Error parsing JSON:", err);
-                }
-              }
-            }
-          })
-          .catch((error) => {
-            if (signal.aborted) {
-              analysisResults.innerHTML =
-                '<div class="text-red-500">Request cancelled.</div>';
-            } else {
-              console.error("Error:", error);
-              analysisResults.innerHTML =
-                '<div class="text-red-500">Error analyzing text. Please try again.</div>';
-            }
-          })
-          .finally(() => {
-            analyzeBtn.disabled = false;
-            analyzeBtn.textContent = "Analyze Text";
-            controller = null;
-          });
-      });
-
-      // Add a function to convert full-width characters to half-width
-      function ToCDB(str) {
-        var tmp = "";
-        for (var i = 0; i < str.length; i++) {
-          if (str.charCodeAt(i) == 12288) {
-            tmp += String.fromCharCode(str.charCodeAt(i) - 12256);
-            continue;
-          }
-          if (str.charCodeAt(i) > 65280 && str.charCodeAt(i) < 65375) {
-            tmp += String.fromCharCode(str.charCodeAt(i) - 65248);
-          } else {
-            tmp += String.fromCharCode(str.charCodeAt(i));
-          }
-        }
-        return tmp;
-      }
-
-      // Function to display OCR data with positions
-      // function displayOCRData(data) {
-      //   if (!data || !data.length) {
-      //     ocrViewer.innerHTML = '<div class="p-4">No OCR data available</div>';
-      //     return;
-      //   }
-
-      //   // Clear previous content
-      //   ocrViewer.innerHTML = "";
-
-      //   // Create container for positioned elements
-      //   const container = document.createElement("div");
-      //   container.style.position = "relative";
-      //   container.style.width = "100%";
-      //   container.style.height = "100%";
-
-      //   // Calculate dimensions
-      //   let maxX = 0;
-      //   let maxY = 0;
-      //   data.forEach(([coords]) => {
-      //     coords.forEach(([x, y]) => {
-      //       maxX = Math.max(maxX, x);
-      //       maxY = Math.max(maxY, y);
-      //     });
-      //   });
-
-      //   // Set container size
-      //   container.style.width = maxX + "px";
-      //   container.style.height = maxY + "px";
-
-      //   // Create text elements
-      //   data.forEach(([coords, [text, confidence]], index) => {
-      //     const element = document.createElement("div");
-      //     element.textContent = text;
-      //     element.style.position = "absolute";
-
-      //     // Calculate position (PaddleOCR coordinates are already in the correct format)
-      //     const x = (coords[0][0] + coords[1][0]) / 2;
-      //     const y = (coords[0][1] + coords[2][1]) / 2;
-
-      //     element.style.left = x + "px";
-      //     element.style.top = y + "px";
-      //     element.style.transform = "translate(-50%, -50%)";
-
-      //     // Styling
-      //     element.style.padding = "2px 4px";
-      //     element.style.backgroundColor = `rgba(255, 255, 255, ${confidence})`;
-      //     element.style.border = "1px solid rgba(0, 0, 0, 0.1)";
-      //     element.style.borderRadius = "2px";
-      //     element.style.cursor = "text";
-      //     element.title = `Confidence: ${(confidence * 100).toFixed(1)}%`;
-
-      //     container.appendChild(element);
-      //   });
-
-      //   ocrViewer.appendChild(container);
-      // }
-    </script>
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Application Scripts -->
+    <script src="static/js/config.js"></script>
+    <script src="static/js/utils.js"></script>
+    <script src="static/js/preview.js"></script>
+    <script src="static/js/ocr.js"></script>
+    <script src="static/js/analysis.js"></script>
+    <script src="static/js/app.js"></script>
   </body>
 </html>

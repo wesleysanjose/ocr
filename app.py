@@ -12,7 +12,7 @@ from api.routes import init_api
 
 def create_app(config_name='default'):
     """Application factory"""
-    app = Flask(__name__)
+    app = Flask(__name__, static_url_path='', static_folder='static')
     
     # Load configuration
     app_config = config[config_name]
