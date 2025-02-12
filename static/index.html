@@ -58,68 +58,66 @@
             <p class="text-blue-500">正在处理文档...</p>
           </div>
 
-          <!-- Zoom Controls -->
-          <div class="mt-2 flex justify-center gap-4 items-center">
-            <button
-              id="zoom-out"
-              class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-            >
-              <span class="text-lg">−</span>
-            </button>
-            <span id="zoom-level" class="px-3 py-1 bg-gray-100 rounded"
-              >100%</span
-            >
-            <button
-              id="zoom-in"
-              class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-            >
-              <span class="text-lg">+</span>
-            </button>
-          </div>
-        </div>
+          <!-- Preview Section -->
+          <div id="preview-section" class="mt-4 hidden">
+            <!-- Preview Header -->
+            <header class="mb-2">
+              <h3 class="text-lg font-semibold">预览</h3>
+            </header>
 
-        <!-- Page Navigation -->
-        <div
-          id="page-nav"
-          class="mt-2 flex justify-center gap-4 items-center hidden"
-        >
-          <button
-            id="prev-page"
-            class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            上一页
-          </button>
-          <span id="page-info" class="px-3 py-1 bg-gray-100 rounded"
-            >第 1 页，共 1 页</span
-          >
-          <button
-            id="next-page"
-            class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            下一页
-          </button>
-        </div>
-
-        <!-- Preview Section -->
-        <div id="preview-section" class="mt-4 hidden">
-          <!-- Preview Header -->
-          <header class="mb-2">
-            <h3 class="text-lg font-semibold">预览</h3>
-          </header>
-
-          <!-- Preview Container -->
-          <div class="relative border rounded-lg p-2 bg-white">
-            <div
-              class="overflow-auto custom-scrollbar"
-              style="max-height: 400px"
-            >
-              <div id="preview-container" class="relative">
-                <img
-                  id="preview-image"
-                  class="max-w-full transition-transform duration-200"
-                  src=""
-                  alt="文档预览"
-                />
+            <!-- Preview Container -->
+            <div class="relative border rounded-lg p-2 bg-white">
+              <!-- Zoom Controls -->
+              <div class="mt-2 flex justify-center gap-4 items-center">
+                <button
+                  id="zoom-out"
+                  class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  <span class="text-lg">−</span>
+                </button>
+                <span id="zoom-level" class="px-3 py-1 bg-gray-100 rounded"
+                  >100%</span
+                >
+                <button
+                  id="zoom-in"
+                  class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  <span class="text-lg">+</span>
+                </button>
+              </div>
+              <!-- Page Navigation -->
+              <div
+                id="page-nav"
+                class="mt-2 flex justify-center gap-4 items-center hidden"
+              >
+                <button
+                  id="prev-page"
+                  class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  上一页
+                </button>
+                <span id="page-info" class="px-3 py-1 bg-gray-100 rounded"
+                  >第 1 页，共 1 页</span
+                >
+                <button
+                  id="next-page"
+                  class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  下一页
+                </button>
+              </div>
+              <div
+                class="overflow-auto custom-scrollbar"
+                style="max-height: 400px"
+              >
+                <div id="preview-container" class="relative">
+                  <img
+                    id="preview-image"
+                    class="max-w-full transition-transform duration-200"
+                    src=""
+                    alt="文档预览"
+                  />
+                </div>
               </div>
             </div>
           </div>
