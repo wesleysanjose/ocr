@@ -62,7 +62,13 @@ class AIAnalyzer {
         console.log('Cancelling analysis');
         if (this.controller) {
             this.controller.abort();
-            this.elements.resultsDiv.innerHTML += '\n\n分析已取消。';
+        // Add styled cancellation message
+        this.elements.resultsDiv.innerHTML += `
+        <div class="mt-4 p-3 bg-amber-50 border-l-4 border-amber-500 text-amber-700">
+            <div class="font-medium">分析已取消</div>
+            <div class="text-sm">点击"分析文本"按钮重新开始分析</div>
+        </div>
+        `;
             this.resetButtons();
         }
     }
