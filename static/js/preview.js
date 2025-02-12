@@ -34,13 +34,10 @@ class PreviewHandler {
 
   updatePreview (data) {
     console.log ('Updating preview:', data);
-    if (data.isPdf) {
-      this.pagesData = data.pages;
-      this.updatePageNavigation (data.totalPages);
-      this.displayPage (1);
-    } else {
-      this.showSinglePage (data.pages[0]);
-    }
+    this.pagesData = data.pages;
+    this.updatePageNavigation (data.totalPages);
+    this.displayPage (1);
+
     this.elements.section.classList.remove ('hidden');
     this.resetZoom ();
   }
