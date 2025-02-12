@@ -51,13 +51,8 @@ def init_api(ocr_processor, document_analyzer, config):
                     preview_data = ocr_processor._get_base64_image(filepath)
                     response_data = {
                         'isPdf': False,
-                        'totalPages': 1,
-                        'pages': [{
-                            'page': 1,
-                            'preview': f"data:image/jpeg;base64,{preview_data}",
-                            'data': structured_data,
-                            'raw': raw_text
-                        }]
+                        'totalPages': len(pages_data),
+                        'pages': pages_data
                     }
 
                 if not config.KEEP_FILES:
