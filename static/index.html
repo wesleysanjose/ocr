@@ -189,21 +189,21 @@
           </div>
 
           <!-- Analysis Controls -->
-          <div class="mb-2">
+          <div class="mb-2 flex items-center space-x-2">
             <button
               id="analyze-btn"
-              class="flex-1 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
               disabled
             >
               分析文本
             </button>
+            <button
+              id="cancel-analyze-btn"
+              class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed hidden"
+            >
+              取消
+            </button>
           </div>
-          <button
-            id="cancel-analyze-btn"
-            class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed hidden"
-          >
-            取消
-          </button>
 
           <!-- Analysis Results -->
           <div class="mb-2">
