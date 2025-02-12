@@ -2,6 +2,18 @@ class AIAnalyzer {
     constructor() {
         console.log('AIAnalyzer constructor start');
         this.controller = null;
+
+        // load default chat completion messages
+        if (!CONFIG || !CONFIG.defaultChatCompletionMessages) {
+            console.error('CONFIG not properly initialized');
+            this.defaultChatCompletionMessages = {
+                system: '你是一个有经验的医生',
+                user: `基于报告扫描的内容，请仔细检查确认报告是正确的，没有错误用语，错别字，特别是医学用语和药品名称。
+                报告首先给个整体的结果，是否有错误。`,
+            };
+        } else {
+            this.defaultChatCompletionMessages = CONFIG.defaultChatCompletionMessages
+        }
         
         // Bind methods to preserve 'this' context
         this.startAnalysis = this.startAnalysis.bind(this);
@@ -31,7 +43,14 @@ class AIAnalyzer {
             analyzeBtn: document.getElementById('analyze-btn'),
             resultsDiv: document.getElementById('analysis-results'),
             cancelBtn: document.getElementById('cancel-analyze-btn'),
+            promptArea: document.getElementById('analysis-prompt'),
+            resetPromptBtn: document.getElementById('reset-prompt-btn')
         };
+
+        // set default chat completion message to prompt area
+        if (this.elements.promptArea) {
+            this.elements.promptArea.value = this.defaultChatCompletionMessages.user;
+        }
 
         if (!this.elements.analyzeBtn || !this.elements.resultsDiv) {
             console.error('Failed to find required elements:', {
@@ -53,6 +72,10 @@ class AIAnalyzer {
 
             this.elements.cancelBtn.addEventListener('click', this.cancelAnalysis);
             console.log('Cancel button event listener attached');
+
+            this.elements.resetPromptBtn.addEventListener('click', () => {
+                this.elements.promptArea.value = this.defaultChatCompletionMessages.user;
+            });
         } else {
             console.error('Analyze button not found');
         }
@@ -124,19 +147,20 @@ class AIAnalyzer {
         this.elements.resultsDiv.innerHTML = "";
 
         console.log('Preparing fetch request to:', CONFIG.api.aiEndpoint);
-
+        // Use custom prompt from textarea
+        const customPrompt = this.elements.promptArea.value.trim();
+        const systemMessage = this.defaultChatCompletionMessages.system;
         // Create request body
         const requestBody = {
             model: CONFIG.analysis.model,
             messages: [
                 {
                     role: "system",
-                    content: "你是一个有经验的医生"
+                    content: "{systemMessage}"
                 },
                 {
                     role: "user",
-                    content: `基于报告扫描的内容，请仔细检查确认报告是正确的，没有错误用语，错别字，特别是医学用语和药品名称。
-                    报告首先给个整体的结果，是否有错误。具体的错误请用红色标示\n\nOCR Text:\n${entries}`
+                    content: `${customPrompt}\n\nOCR Text:\n${entries}`
                 }
             ],
             max_tokens: CONFIG.analysis.maxTokens,

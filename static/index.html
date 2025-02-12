@@ -167,6 +167,26 @@
           <header class="mb-4">
             <h2 class="text-lg font-semibold">人工智能错误分析</h2>
           </header>
+          <!-- Prompt Editor -->
+          <div class="mb-4">
+            <label
+              for="analysis-prompt"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              分析提示词
+            </label>
+            <textarea
+              id="analysis-prompt"
+              class="w-full h-32 p-2 border border-gray-300 rounded mb-2 text-sm resize-y"
+              placeholder="输入分析提示词..."
+            ></textarea>
+            <button
+              id="reset-prompt-btn"
+              class="text-sm text-blue-600 hover:text-blue-800"
+            >
+              重置为默认提示词
+            </button>
+          </div>
 
           <!-- Analysis Controls -->
           <div class="mb-2">
@@ -191,7 +211,7 @@
           <div class="mb-2">
             <div
               id="analysis-results"
-              class="w-full h-96 p-4 border border-gray-300 rounded overflow-auto prose prose-sm max-w-none custom-scrollbar"
+              class="w-full h-96 p-4 border border-gray-300 rounded overflow-auto prose prose-sm max-w-none"
             ></div>
           </div>
         </div>
