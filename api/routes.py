@@ -47,8 +47,7 @@ def init_api(ocr_processor, document_analyzer, config):
                         'pages': pages_data
                     }
                 else:
-                    structured_data, raw_text = ocr_processor.process_image(filepath)
-                    preview_data = ocr_processor._get_base64_image(filepath)
+                    pages_data = ocr_processor.process_image(filepath)
                     response_data = {
                         'isPdf': False,
                         'totalPages': len(pages_data),
