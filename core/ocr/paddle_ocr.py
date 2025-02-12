@@ -30,7 +30,29 @@ class PaddleOCREngine(OCREngine):
             logger.error(f"Failed to initialize PaddleOCR: {e}", exc_info=True)
             raise
 
-    def process_image(self, image_path: Path) -> Tuple[List, str]:
+    def process_image(self, image_path: Path) -> List[Dict]:
+        """Process single image with PaddleOCR"""
+        pages_data = []
+
+        try:
+            logger.info(f"Processing image: {image_path}")
+            structured_data, raw_text = self.scan_image(image_path)
+            preview_data = self._get_base64_image(image_path)
+                
+            pages_data.append({
+                    'page': 0,
+                    'preview': f"data:image/jpeg;base64,{preview_data}",
+                    'data': structured_data,
+                    'raw': raw_text
+            })
+            
+            return pages_data
+
+        except Exception as e:
+            logger.error(f"PaddleOCR processing error: {e}", exc_info=True)
+            raise
+
+    def scan_image(self, image_path: Path) -> Tuple[List, str]:
         """Process single image with PaddleOCR"""
         try:
             logger.info(f"Processing image: {image_path}")
@@ -68,7 +90,7 @@ class PaddleOCREngine(OCREngine):
                 preview_path = output_dir / f"page_{i}.jpg"
                 image.save(preview_path, 'JPEG')
                 
-                structured_data, raw_text = self.process_image(preview_path)
+                structured_data, raw_text = self.scan_image(preview_path)
                 preview_data = self._get_base64_image(preview_path)
                 
                 pages_data.append({
