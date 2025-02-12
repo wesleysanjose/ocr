@@ -27,7 +27,6 @@ const CONFIG = {
   // default system messages and user messages
   defaultChatCompletionMessages: {
     system: '你是一个有经验的医生',
-    user: `基于报告扫描的内容，请仔细检查确认报告是正确的，没有错误用语，错别字，特别是医学用语和药品名称。
-    报告首先给个整体的结果，是否有错误。`,
+    user: `基于报告扫描的内容，请仔细检查确认报告是正确的，没有错误用语，错别字，特别是医学用语和药品名称。报告首先给个整体的结果，是否有错误。`,
   },
 };
