@@ -29,7 +29,8 @@ class AIAnalyzer {
         console.log('Initializing AI analyzer elements');
         this.elements = {
             analyzeBtn: document.getElementById('analyze-btn'),
-            resultsDiv: document.getElementById('analysis-results')
+            resultsDiv: document.getElementById('analysis-results'),
+            cancelBtn: document.getElementById('cancel-analyze-btn'),
         };
 
         if (!this.elements.analyzeBtn || !this.elements.resultsDiv) {
@@ -48,10 +49,29 @@ class AIAnalyzer {
                 console.log('Analyze button clicked via onclick');
                 boundStartAnalysis();
             };
-            console.log('Event listener attached');
+            console.log('Analyze button event listener attached');
+
+            this.elements.cancelBtn.addEventListener('click', this.cancelAnalysis);
+            console.log('Cancel button event listener attached');
         } else {
             console.error('Analyze button not found');
         }
+    }
+
+    cancelAnalysis = () => {
+        console.log('Cancelling analysis');
+        if (this.controller) {
+            this.controller.abort();
+            this.elements.resultsDiv.innerHTML += '\n\n分析已取消。';
+            this.resetButtons();
+        }
+    }
+
+    resetButtons() {
+        this.elements.analyzeBtn.disabled = false;
+        this.elements.analyzeBtn.textContent = "分析文本";
+        this.elements.cancelBtn.classList.add('hidden');
+        this.controller = null;
     }
 
     startAnalysis() {
@@ -93,6 +113,7 @@ class AIAnalyzer {
 
         // Prepare for analysis
         this.elements.analyzeBtn.disabled = true;
+        this.elements.cancelBtn.classList.remove('hidden');
         this.elements.analyzeBtn.textContent = "分析中...";
         this.elements.resultsDiv.innerHTML = "";
 
@@ -142,6 +163,7 @@ class AIAnalyzer {
         .finally(() => {
             console.log('Request completed');
             this.resetAnalyzeButton();
+            this.resetButtons();
         });
     }
 
@@ -216,6 +238,7 @@ class AIAnalyzer {
         } else {
             this.elements.resultsDiv.innerHTML = '<div class="text-red-500">分析失败，请重试</div>';
         }
+        this.resetButtons();
     }
 
     resetAnalyzeButton() {
