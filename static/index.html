@@ -169,25 +169,31 @@
           </header>
 
           <!-- Analysis Controls -->
-          <button
-            id="analyze-btn"
-            class="flex-1 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-            disabled
-          >
-            分析文本
-          </button>
-          <button
-            id="cancel-analyze-btn"
-            class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed hidden"
-          >
-            取消
-          </button>
+          <div class="mb-2">
+            <button
+              id="analyze-btn"
+              class="flex-1 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              disabled
+            >
+              分析文本
+            </button>
+          </div>
+          <div class="mb-2">
+            <button
+              id="cancel-analyze-btn"
+              class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed hidden"
+            >
+              取消
+            </button>
+          </div>
 
           <!-- Analysis Results -->
-          <div
-            id="analysis-results"
-            class="w-full h-96 p-4 border border-gray-300 rounded overflow-auto prose prose-sm max-w-none custom-scrollbar"
-          ></div>
+          <div class="mb-2">
+            <div
+              id="analysis-results"
+              class="w-full h-96 p-4 border border-gray-300 rounded overflow-auto prose prose-sm max-w-none custom-scrollbar"
+            ></div>
+          </div>
         </div>
       </section>
     </div>
