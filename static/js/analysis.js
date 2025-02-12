@@ -213,7 +213,7 @@ class AIAnalyzer {
             }
         } catch (error) {
             console.error('Error reading stream:', error);
-            throw error;
+            //throw error;
         }
     }
 
@@ -233,11 +233,13 @@ class AIAnalyzer {
 
     handleError(error) {
         console.error('Handling error:', error);
-        if (this.controller?.signal.aborted) {
-            this.elements.resultsDiv.innerHTML = '<div class="text-red-500">分析已取消</div>';
+        // Check if it's an abort error
+        if (error.name === 'AbortError' || this.controller?.signal.aborted) {
+            errorMessage = '<div class="text-amber-500">分析已取消，请重试</div>';
         } else {
             this.elements.resultsDiv.innerHTML = '<div class="text-red-500">分析失败，请重试</div>';
         }
+        this.elements.resultsDiv.innerHTML = errorMessage;
         this.resetButtons();
     }
 
