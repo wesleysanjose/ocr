@@ -67,6 +67,20 @@
 
             <!-- Preview Container -->
             <div class="relative border rounded-lg p-2 bg-white">
+              <div
+                class="overflow-auto custom-scrollbar"
+                style="max-height: 400px"
+              >
+                <div id="preview-container" class="relative">
+                  <img
+                    id="preview-image"
+                    class="max-w-full transition-transform duration-200"
+                    src=""
+                    alt="文档预览"
+                  />
+                </div>
+              </div>
+
               <!-- Zoom Controls -->
               <div class="mt-2 flex justify-center gap-4 items-center">
                 <button
@@ -85,40 +99,28 @@
                   <span class="text-lg">+</span>
                 </button>
               </div>
-              <!-- Page Navigation -->
-              <div
-                id="page-nav"
-                class="mt-2 flex justify-center gap-4 items-center hidden"
+            </div>
+
+            <!-- Page Navigation -->
+            <div
+              id="page-nav"
+              class="mt-2 flex justify-center gap-4 items-center hidden"
+            >
+              <button
+                id="prev-page"
+                class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
-                <button
-                  id="prev-page"
-                  class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  上一页
-                </button>
-                <span id="page-info" class="px-3 py-1 bg-gray-100 rounded"
-                  >第 1 页，共 1 页</span
-                >
-                <button
-                  id="next-page"
-                  class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  下一页
-                </button>
-              </div>
-              <div
-                class="overflow-auto custom-scrollbar"
-                style="max-height: 400px"
+                上一页
+              </button>
+              <span id="page-info" class="px-3 py-1 bg-gray-100 rounded"
+                >第 1 页，共 1 页</span
               >
-                <div id="preview-container" class="relative">
-                  <img
-                    id="preview-image"
-                    class="max-w-full transition-transform duration-200"
-                    src=""
-                    alt="文档预览"
-                  />
-                </div>
-              </div>
+              <button
+                id="next-page"
+                class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                下一页
+              </button>
             </div>
           </div>
         </div>
@@ -142,7 +144,6 @@
               处理
             </button>
           </div>
-
           <!-- OCR Results Display -->
           <div
             id="ocr-results"
