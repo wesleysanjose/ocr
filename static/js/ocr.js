@@ -186,7 +186,7 @@ class OCRProcessor {
     this.keyValueMap.set (key, value);
     this.updateKVDisplay ();
     this.hideModal ();
-    this.markProcessed ();
+    //this.markProcessed ();
   }
 
   markProcessed () {
