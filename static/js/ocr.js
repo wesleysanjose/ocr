@@ -223,7 +223,7 @@ class OCRProcessor {
       )
       .join ('');
 
-    this.attachRemoveHandlers ();
+    this.attachHandlers ();
 
     // Enable analyze button if there are key-value pairs
     const analyzeBtn = document.getElementById ('analyze-btn');
