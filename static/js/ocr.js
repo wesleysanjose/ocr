@@ -232,18 +232,76 @@ class OCRProcessor {
     }
   }
 
-  attachRemoveHandlers () {
+  attachHandlers () {
+    // Attach remove handlers
     const removeButtons = this.elements.kvDisplay.querySelectorAll (
       '.remove-kv'
     );
     removeButtons.forEach (button => {
       button.addEventListener ('click', e => {
         const key = e.target.dataset.key;
-        // Add confirmation dialog
         if (confirm (`确定要删除 "${key}" 吗？`)) {
           this.keyValueMap.delete (key);
           this.updateKVDisplay ();
         }
+      });
+    });
+
+    // Attach edit handlers
+    const editButtons = this.elements.kvDisplay.querySelectorAll ('.edit-kv');
+    editButtons.forEach (button => {
+      button.addEventListener ('click', e => {
+        const key = e.target.closest ('.edit-kv').dataset.key;
+        const value = e.target.closest ('.edit-kv').dataset.value;
+
+        // Get modal elements
+        const modal = document.getElementById ('key-input-modal');
+        const keyInput = document.getElementById ('key-input');
+        const valueInput = document.getElementById ('value-input');
+        const selectedText = document.getElementById ('modal-selected-text');
+        const saveButton = document.getElementById ('modal-save');
+        const cancelButton = document.getElementById ('modal-cancel');
+
+        // Populate modal with existing values
+        keyInput.value = key;
+        valueInput.value = value;
+        selectedText.textContent = ''; // Clear selected text as this is an edit
+
+        // Show modal
+        modal.classList.remove ('hidden');
+
+        // Handle save
+        const handleSave = () => {
+          const newKey = keyInput.value.trim ();
+          const newValue = valueInput.value.trim ();
+
+          if (newKey && newValue) {
+            // Delete old key-value pair if key changed
+            if (newKey !== key) {
+              this.keyValueMap.delete (key);
+            }
+            // Add new key-value pair
+            this.keyValueMap.set (newKey, newValue);
+            this.updateKVDisplay ();
+            modal.classList.add ('hidden');
+          }
+
+          // Clean up event listeners
+          saveButton.removeEventListener ('click', handleSave);
+          cancelButton.removeEventListener ('click', handleCancel);
+        };
+
+        // Handle cancel
+        const handleCancel = () => {
+          modal.classList.add ('hidden');
+          // Clean up event listeners
+          saveButton.removeEventListener ('click', handleSave);
+          cancelButton.removeEventListener ('click', handleCancel);
+        };
+
+        // Add event listeners
+        saveButton.addEventListener ('click', handleSave);
+        cancelButton.addEventListener ('click', handleCancel);
       });
     });
   }
