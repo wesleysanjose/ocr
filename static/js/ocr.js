@@ -205,11 +205,20 @@ class OCRProcessor {
       .map (
         ([key, value]) => `
                 <div class="flex gap-2 mb-1 p-1 hover:bg-gray-50">
-                    <span class="font-semibold min-w-[100px]">${key}:</span>
-                    <span class="flex-1">${value}</span>
-                    <button class="remove-kv px-2 text-red-500 hover:bg-red-50 rounded"
-                            data-key="${key}">×</button>
-                </div>
+          <span class="font-semibold min-w-[100px]">${key}:</span>
+          <span class="flex-1">${value}</span>
+          <div class="flex gap-1">
+            <button class="edit-kv px-2 text-blue-500 hover:bg-blue-50 rounded"
+                    data-key="${key}" data-value="${value}">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" 
+                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+              </svg>
+            </button>
+            <button class="remove-kv px-2 text-red-500 hover:bg-red-50 rounded"
+                    data-key="${key}">×</button>
+          </div>
+        </div>
             `
       )
       .join ('');
