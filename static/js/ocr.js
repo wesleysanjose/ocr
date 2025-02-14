@@ -224,10 +224,17 @@ class OCRProcessor {
   }
 
   attachRemoveHandlers () {
-    this.elements.kvDisplay.querySelectorAll ('.remove-kv').forEach (btn => {
-      btn.addEventListener ('click', e => {
+    const removeButtons = this.elements.kvDisplay.querySelectorAll (
+      '.remove-kv'
+    );
+    removeButtons.forEach (button => {
+      button.addEventListener ('click', e => {
         const key = e.target.dataset.key;
-        this.removeKeyValue (key);
+        // Add confirmation dialog
+        if (confirm (`确定要删除 "${key}" 吗？`)) {
+          this.keyValueMap.delete (key);
+          this.updateKVDisplay ();
+        }
       });
     });
   }
