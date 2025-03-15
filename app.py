@@ -75,3 +75,13 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+# Change this:
+# from config import get_config
+
+# To this:
+from settings import get_config
+
+# Then use it like:
+config = get_config()
