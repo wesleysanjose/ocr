@@ -8,8 +8,13 @@ class AIAnalyzer {
             console.error('CONFIG not properly initialized');
             this.defaultChatCompletionMessages = {
                 system: '你是一个有经验的医生',
-                user: `基于报告扫描的内容，请仔细检查确认报告是正确的，没有错误用语，错别字，特别是医学用语和药品名称。
-                报告首先给个整体的结果，是否有错误。`,
+                user: `基于报告扫描的内容，请仔细检查确认报告是正确的，主要的错误来自于ocr扫描错误，现象是扫描成了别的字，或者漏扫了字，这是你检查的重点。另外，需要检查是否有错误用语，错别字，特别是医学用语和药品名称，分析整个上下文判断前后是否恰合，输出错误和需要改正的地方，下面是输出格式。
+
+输出例子
+错误1: 
+错误2:
+
+以下是一些医学术语，例如：骨密度`,
             };
         } else {
             this.defaultChatCompletionMessages = CONFIG.defaultChatCompletionMessages

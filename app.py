@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 
 from config.settings import config
+from models.case_store import CaseStore
+from models.material_store import MaterialStore
 from utils.logger import setup_logger
 #from core.ocr import OCRProcessor
 from core.ocr.factory import OCREngineFactory
@@ -33,6 +35,16 @@ def create_app(config_name='default'):
     # ocr_processor = OCRProcessor(app_config)
     document_analyzer = DocumentAnalyzer(app_config)
 
+    # Initialize MongoDB stores
+    case_store = CaseStore(
+        mongo_uri=app_config.MONGODB_URI,
+        db_name=app_config.MONGODB_DB_NAME
+    )
+    material_store = MaterialStore(
+        mongo_uri=app_config.MONGODB_URI,
+        db_name=app_config.MONGODB_DB_NAME
+    )
+
     # Register blueprints
     api_bp = init_api(ocr_engine, document_analyzer, app_config)
     app.register_blueprint(api_bp, url_prefix='/api')
@@ -40,6 +52,11 @@ def create_app(config_name='default'):
     @app.route('/')
     def index():
         return app.send_static_file('index.html')
+    
+    @app.route('/cases')
+    def cases_page():
+        """Render the case management page"""
+        return render_template('case_management.html')
     
     return app
 

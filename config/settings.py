@@ -22,21 +22,40 @@ class Config:
     OCR_LANG = 'ch'
     USE_ANGLE_CLS = True
 
+    # MongoDB configuration
+    MONGODB_URI = "mongodb://epyc:27017"
+    MONGODB_DB_NAME = "forensic_system"
+    MONGODB_OPTIONS = {
+        "serverSelectionTimeoutMS": 5000,
+        "connectTimeoutMS": 10000
+    }
+
     # API configuration
     AI_API_BASE_URL = "http://10.0.0.100:5000/v1"
     AI_API_KEY = "not-needed"
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    MONGODB_URI = "mongodb://epyc:27017"
+    MONGODB_DB_NAME = "forensic_system_dev"
 
 class ProductionConfig(Config):
-    # Production-specific settings
     DEBUG = False
     KEEP_FILES = False
+    MONGODB_URI = os.environ.get('MONGO_URL', 'mongodb://epyc:27017')
+    MONGODB_DB_NAME = os.environ.get('MONGO_DB_NAME', 'forensic_system')
+    # Add any additional production MongoDB options
+    MONGODB_OPTIONS = {
+        **Config.MONGODB_OPTIONS,
+        "ssl": os.environ.get('MONGO_SSL', 'false').lower() == 'true',
+        "authSource": os.environ.get('MONGO_AUTH_SOURCE', 'admin')
+    }
 
 class TestingConfig(Config):
     TESTING = True
     UPLOAD_FOLDER = BASE_DIR / 'test_uploads'
+    MONGODB_URI = "mongodb://epyc:27017"
+    MONGODB_DB_NAME = "forensic_system_test"
 
 # Select configuration based on environment
 config = {

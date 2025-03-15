@@ -1,4 +1,4 @@
-installation
+install paddle paddle ocr
 
 1. conda install python=3.11
 2. conda install nvidia/label/cuda-12.0.1::cuda-toolkit
