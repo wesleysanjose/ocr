@@ -16,21 +16,26 @@ class MaterialStore:
             raise ConnectionError(f"Failed to connect to MongoDB: {str(e)}")
 
     def _ensure_indexes(self):
-        indexes = [
-            [("case_id", 1), ("material_type", 1)],  # Compound index
-            ("source", 1),
-            ("created_at", -1),
-            ("document_id", 1),  # Index for document reference
-            "content.text"  # Full-text search index
-        ]
-        
-        for index in indexes:
-            if isinstance(index, str):
-                self.materials.create_index([(index, "text")])
-            elif isinstance(index, list):
-                self.materials.create_index(index)
-            else:
-                self.materials.create_index(index)
+        """Create indexes for the materials collection"""
+        try:
+            # The error is happening here with the index format
+            # The format should be a list of tuples or a list of (key, direction) pairs
+            # Instead of passing an integer directly, we need to use pymongo's index direction constants
+            
+            # Fix the index creation by using proper format
+            from pymongo import ASCENDING, DESCENDING, TEXT
+            
+            # Create indexes with proper format
+            self.materials.create_index([("case_id", ASCENDING)])
+            self.materials.create_index([("document_id", ASCENDING)])
+            self.materials.create_index([("created_at", DESCENDING)])
+            self.materials.create_index([("filename", TEXT)], default_language='english')
+            
+            # If you need compound indexes, format them like this:
+            # self.materials.create_index([("case_id", ASCENDING), ("created_at", DESCENDING)])
+        except Exception as e:
+            print(f"Error creating indexes: {str(e)}")
+            raise
 
     def create_material(self, case_id: str, material_data: Dict[str, Any]) -> str:
         # Validate case_id exists
