@@ -19,8 +19,9 @@ def init_api(ocr_processor, document_analyzer, config):
     """Initialize API routes with dependencies"""
     
     # Initialize case management components
-    case_store = CaseStore(config.MONGO_URI)
-    material_store = MaterialStore(config.MONGO_URI)
+    # Change MONGO_URI to MONGODB_URI to match your config
+    case_store = CaseStore(config.MONGODB_URI)
+    material_store = MaterialStore(config.MONGODB_URI)
     storage = StorageFactory.create_storage(config.STORAGE_CONFIG)
     document_manager = DocumentManager(material_store, case_store, storage)
     
