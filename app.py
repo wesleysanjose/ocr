@@ -1,13 +1,13 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_cors import CORS
 import os
 from pathlib import Path
 
-from config.settings import config
+# Fix the import path to use settings.py at the root level
+from settings import get_config
 from models.case_store import CaseStore
 from models.material_store import MaterialStore
 from utils.logger import setup_logger
-#from core.ocr import OCRProcessor
 from core.ocr.factory import OCREngineFactory
 from core.analyzer import DocumentAnalyzer
 from api.routes import init_api
@@ -16,8 +16,8 @@ def create_app(config_name='default'):
     """Application factory"""
     app = Flask(__name__, static_url_path='', static_folder='static')
     
-    # Load configuration
-    app_config = config[config_name]
+    # Load configuration using get_config from settings.py
+    app_config = get_config(config_name)
     app.config.from_object(app_config)
     
     # Setup logging
@@ -31,8 +31,6 @@ def create_app(config_name='default'):
     
     # Initialize core components
     ocr_engine = OCREngineFactory.create(app_config.OCR_ENGINE, app_config)
-
-    # ocr_processor = OCRProcessor(app_config)
     document_analyzer = DocumentAnalyzer(app_config)
 
     # Initialize MongoDB stores
@@ -75,13 +73,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-# Change this:
-# from config import get_config
-
-# To this:
-from settings import get_config
-
-# Then use it like:
-config = get_config()

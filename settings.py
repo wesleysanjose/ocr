@@ -12,6 +12,7 @@ class BaseConfig:
     
     # MongoDB settings
     MONGODB_URI = os.environ.get('MONGODB_URI', 'mongodb://localhost:27017/forensic_system')
+    MONGODB_DB_NAME = 'forensic_system'
     
     # File upload settings
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
@@ -21,6 +22,7 @@ class BaseConfig:
     
     # OCR settings
     OCR_LANG = 'en'  # Default OCR language
+    OCR_ENGINE = 'paddle'  # Default OCR engine
     
     # Storage configuration
     STORAGE_CONFIG = {
