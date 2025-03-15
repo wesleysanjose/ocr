@@ -4,7 +4,7 @@ from datetime import datetime
 
 from .material_store import MaterialStore
 from .case_store import CaseStore
-from ..storage.document_storage import DocumentStorage
+from storage.document_storage import DocumentStorage
 
 class DocumentManager:
     """Manager class to handle documents across storage and database"""
