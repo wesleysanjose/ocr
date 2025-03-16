@@ -26,6 +26,9 @@ def create_app(config_name='default'):
     
     # Initialize CORS
     CORS(app)
+
+    # Connect to database right away
+    asyncio.run(db.connect_db())
     
     # Ensure required directories exist
     Path(app.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
@@ -36,14 +39,9 @@ def create_app(config_name='default'):
     # ocr_processor = OCRProcessor(app_config)
     document_analyzer = DocumentAnalyzer(app_config)
 
-    # Set up database connection
-    @app.before_first_request
-    async def setup_db():
-        await db.connect_db()
-
     @app.teardown_appcontext
-    async def close_db_connection(exception):
-        await db.close_db()
+    def close_db_connection(exception):
+        asyncio.run(db.close_db())
 
     # Register blueprints
     api_bp = init_api(ocr_engine, document_analyzer, app_config)
