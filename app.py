@@ -47,7 +47,7 @@ def create_app(config_name='default'):
     api_bp = init_api(ocr_engine, document_analyzer, app_config)
     app.register_blueprint(api_bp, url_prefix='/api')
     
-    # Register case management routes - add the /api prefix
+    # Register case management routes with the /api prefix
     case_bp = init_case_api(db.db, ocr_engine, document_analyzer, app_config)
     app.register_blueprint(case_bp, url_prefix='/api')  # Add /api prefix here
 

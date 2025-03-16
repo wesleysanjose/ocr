@@ -12,17 +12,15 @@ class CaseAPI {
       queryParams.append ('skip', (page - 1) * limit);
       queryParams.append ('limit', limit);
 
-      const response = await fetch (
-        `${this.baseUrl}/?${queryParams.toString ()}`
-      );
-
+      const response = await fetch(`${this.baseUrl}/?${queryParams}`);
+      
       if (!response.ok) {
-        throw new Error (`API error: ${response.status}`);
+        throw new Error(`API error: ${response.status}`);
       }
-
-      return await response.json ();
+      
+      return await response.json();
     } catch (error) {
-      console.error ('Error fetching cases:', error);
+      console.error('Error fetching cases:', error);
       throw error;
     }
   }
