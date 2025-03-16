@@ -37,6 +37,25 @@ class CaseManagement {
       uploadBtn: document.getElementById ('upload-document-btn'),
       documentsList: document.getElementById ('documents-list'),
     };
+
+    // Log the elements to verify they're found
+    console.log ('Initialized elements:', {
+      caseDetail: this.elements.caseDetail,
+      emptyState: this.elements.emptyState,
+      caseInfoForm: this.elements.caseInfoForm,
+    });
+
+    // Check if any elements are missing
+    const missingElements = [];
+    for (const [key, value] of Object.entries (this.elements)) {
+      if (!value) {
+        missingElements.push (key);
+      }
+    }
+
+    if (missingElements.length > 0) {
+      console.error ('Missing DOM elements:', missingElements);
+    }
   }
 
   bindEvents () {
@@ -267,11 +286,23 @@ class CaseManagement {
     try {
       console.log (`Loading case detail for ID: ${caseId}`);
 
-      // Show loading state
-      this.elements.emptyState.classList.add ('hidden');
-      this.elements.caseDetail.classList.remove ('hidden');
-      this.elements.caseDetail.innerHTML =
-        '<div class="p-4 text-gray-500 text-center">加载中...</div>';
+      // Important: Don't modify the HTML content, just show loading indicator
+      const loadingIndicator = document.createElement ('div');
+      loadingIndicator.className = 'p-4 text-gray-500 text-center';
+      loadingIndicator.textContent = '加载中...';
+
+      // Clear any previous content without removing the form
+      const detailContainer = this.elements.caseDetail.querySelector (
+        '.detail-container'
+      );
+      if (detailContainer) {
+        detailContainer.innerHTML = '';
+        detailContainer.appendChild (loadingIndicator);
+      } else {
+        // If we don't have a detail container, just show the case detail and empty state properly
+        this.elements.emptyState.classList.add ('hidden');
+        this.elements.caseDetail.classList.remove ('hidden');
+      }
 
       // Load case data
       console.log (`Making API request to: ${this.api.baseUrl}/${caseId}`);
@@ -281,39 +312,50 @@ class CaseManagement {
 
       // Render detail view
       this.renderCaseDetail ();
+      // Force visibility of case detail panel
+      this.elements.caseDetail.style.display = 'block';
+      this.elements.emptyState.style.display = 'none';
     } catch (error) {
       console.error (`Failed to load case ${caseId}:`, error);
-      this.elements.caseDetail.innerHTML =
-        '<div class="p-4 text-red-500 text-center">加载案件详情失败</div>';
+
+      // Show error message without removing form
+      const errorMessage = document.createElement ('div');
+      errorMessage.className = 'p-4 text-red-500 text-center';
+      errorMessage.textContent = '加载案件详情失败';
+
+      const detailContainer = this.elements.caseDetail.querySelector (
+        '.detail-container'
+      );
+      if (detailContainer) {
+        detailContainer.innerHTML = '';
+        detailContainer.appendChild (errorMessage);
+      } else {
+        // Just make sure the right sections are visible
+        this.elements.emptyState.classList.add ('hidden');
+        this.elements.caseDetail.classList.remove ('hidden');
+      }
     }
   }
 
   renderCaseDetail () {
-    console.log ('Rendering case detail for:', this.selectedCase);
+    if (!this.selectedCase) return;
 
-    if (!this.selectedCase) {
-      console.error ('No selected case to render');
-      return;
-    }
+    console.log ('Showing case detail view and hiding empty state');
 
-    // Log DOM elements before manipulation
-    console.log ('DOM elements:', {
-      caseDetail: this.elements.caseDetail,
-      emptyState: this.elements.emptyState,
-      caseInfoForm: this.elements.caseInfoForm,
-    });
-
-    // Reset case detail view
-    this.elements.caseDetail.innerHTML = '';
-
-    // Reload the form elements
+    // Make sure the detail view is visible and the empty state is hidden
     this.elements.caseDetail.classList.remove ('hidden');
     this.elements.emptyState.classList.add ('hidden');
 
+    // Log the current display status
+    console.log ('Current display status:', {
+      caseDetailDisplay: window.getComputedStyle (this.elements.caseDetail)
+        .display,
+      emptyStateDisplay: window.getComputedStyle (this.elements.emptyState)
+        .display,
+    });
+
     // Fill form fields
     const form = this.elements.caseInfoForm;
-    console.log ('Form element:', form);
-
     if (form) {
       const nameInput = form.querySelector ('#case-name');
       const phoneInput = form.querySelector ('#case-phone');
@@ -321,15 +363,6 @@ class CaseManagement {
       const statusSelect = form.querySelector ('#case-status');
       const caseNumberInput = form.querySelector ('#case-number');
       const createTimeInput = form.querySelector ('#case-create-time');
-
-      console.log ('Form inputs:', {
-        nameInput,
-        phoneInput,
-        typeSelect,
-        statusSelect,
-        caseNumberInput,
-        createTimeInput,
-      });
 
       if (nameInput) nameInput.value = this.selectedCase.name;
       if (phoneInput) phoneInput.value = this.selectedCase.phone;
@@ -341,12 +374,15 @@ class CaseManagement {
         createTimeInput.value = this.formatDateTime (
           this.selectedCase.create_time
         );
-    } else {
-      console.error ('Form element not found');
+
+      console.log ('Form fields updated with case data');
     }
 
     // Render documents list
     this.renderDocumentsList ();
+
+    // Force a reflow to make sure the changes take effect
+    void this.elements.caseDetail.offsetHeight;
   }
 
   formatDateTime (dateString) {
