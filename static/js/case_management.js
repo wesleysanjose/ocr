@@ -519,21 +519,38 @@ class CaseManagement {
   }
 
   async uploadDocument () {
-    if (!this.selectedCase) return;
+    if (!this.selectedCase) {
+      console.error ('No case selected for document upload');
+      return;
+    }
 
     const fileInput = this.elements.fileInput;
     if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+      console.error ('No file selected for upload');
       this.showToast ('请选择文件', 'error');
       return;
     }
 
     const file = fileInput.files[0];
     const documentType = this.elements.documentTypeSelect.value;
+    console.log (
+      `Uploading file: ${file.name}, type: ${file.type}, size: ${file.size}, document type: ${documentType}`
+    );
 
     try {
       // Disable button
       this.elements.uploadBtn.disabled = true;
       this.elements.uploadBtn.textContent = '上传中...';
+
+      // Create FormData object
+      const formData = new FormData ();
+      formData.append ('file', file);
+      formData.append ('document_type', documentType);
+      formData.append ('analyze', 'false'); // Set to 'true' to enable auto-analysis
+
+      console.log (
+        `Making upload request to: ${this.api.baseUrl}/${this.selectedCase.id}/documents`
+      );
 
       // Upload file
       const result = await this.api.uploadDocument (
@@ -541,6 +558,8 @@ class CaseManagement {
         file,
         documentType
       );
+
+      console.log ('Upload result:', result);
 
       // Update case data
       if (!this.selectedCase.documents) {
@@ -633,6 +652,75 @@ class CaseManagement {
       clearTimeout (timeout);
       timeout = setTimeout (() => func.apply (context, args), wait);
     };
+  }
+}
+
+// Add this to the end of case_management.js
+
+function testDocumentUpload () {
+  console.log ('Testing document upload component...');
+
+  // Get the case management instance
+  const caseManagement = window.caseManagement;
+  if (!caseManagement) {
+    console.error ('Case management instance not found');
+    return;
+  }
+
+  // Check if elements are properly initialized
+  console.log ('Upload elements:', {
+    uploadForm: caseManagement.elements.uploadForm,
+    fileInput: caseManagement.elements.fileInput,
+    documentTypeSelect: caseManagement.elements.documentTypeSelect,
+    uploadBtn: caseManagement.elements.uploadBtn,
+  });
+
+  // Check event listeners
+  if (caseManagement.elements.uploadForm) {
+    const listeners = getEventListeners (caseManagement.elements.uploadForm);
+    console.log ('Upload form event listeners:', listeners);
+  } else {
+    console.log ('Upload form element not found, cannot check event listeners');
+  }
+
+  // Check the file input element
+  const fileInput = caseManagement.elements.fileInput;
+  if (fileInput) {
+    console.log ('File input element found:', {
+      id: fileInput.id,
+      type: fileInput.type,
+      accept: fileInput.accept,
+    });
+
+    // Check if the accept attribute is correctly set
+    if (!fileInput.accept) {
+      console.warn ('File input accept attribute is not set');
+    } else {
+      console.log ('File input accept attribute is set to:', fileInput.accept);
+    }
+  } else {
+    console.error ('File input element not found');
+  }
+
+  console.log ('Document upload component test complete');
+}
+
+// Call this function after the page has loaded
+window.addEventListener ('DOMContentLoaded', () => {
+  // Wait for case management initialization
+  setTimeout (() => {
+    if (window.caseManagement) {
+      testDocumentUpload ();
+    }
+  }, 1000);
+});
+
+// Helper function to check for DOM event listeners (note: this won't work in all browsers)
+function getEventListeners (element) {
+  if (typeof element._events !== 'undefined') {
+    return element._events;
+  } else {
+    return 'Cannot access event listeners (not supported in this browser)';
   }
 }
 

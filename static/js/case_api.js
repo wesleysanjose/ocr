@@ -85,21 +85,46 @@ class CaseAPI {
 
   async uploadDocument (caseId, file, documentType = '待分类', analyze = false) {
     try {
+      console.log (`API: Uploading document to case ${caseId}`);
+      console.log (
+        `File details: name=${file.name}, type=${file.type}, size=${file.size}bytes`
+      );
+      console.log (`Document type: ${documentType}, Analyze: ${analyze}`);
+
       const formData = new FormData ();
       formData.append ('file', file);
       formData.append ('document_type', documentType);
       formData.append ('analyze', analyze.toString ());
+
+      // Log form data entries for debugging
+      console.log ('Form data entries:');
+      for (let [key, value] of formData.entries ()) {
+        console.log (`- ${key}: ${value instanceof File ? value.name : value}`);
+      }
+
+      console.log (
+        `Making fetch request to: ${this.baseUrl}/${caseId}/documents`
+      );
 
       const response = await fetch (`${this.baseUrl}/${caseId}/documents`, {
         method: 'POST',
         body: formData,
       });
 
+      console.log (
+        `Response status: ${response.status} ${response.statusText}`
+      );
+
       if (!response.ok) {
-        throw new Error (`API error: ${response.status}`);
+        const errorText = await response.text ();
+        console.error (`API error response: ${errorText}`);
+        throw new Error (`API error: ${response.status} - ${errorText}`);
       }
 
-      return await response.json ();
+      const result = await response.json ();
+      console.log ('API response:', result);
+
+      return result;
     } catch (error) {
       console.error (`Error uploading document to case ${caseId}:`, error);
       throw error;
