@@ -15,6 +15,7 @@ const CONFIG = {
 
   // API endpoints
   api: {
+    baseUrl: '/api',
     aiEndpoint: 'http://10.0.0.100:5000/v1/chat/completions',
   },
 
