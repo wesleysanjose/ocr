@@ -7,7 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # App configuration
 class Config:
     # Flask configuration
-    DEBUG = False
+    DEBUG = True
     TESTING = False
     SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-here')
     MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100MB
