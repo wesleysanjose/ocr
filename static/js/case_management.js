@@ -265,6 +265,8 @@ class CaseManagement {
 
   async loadCaseDetail (caseId) {
     try {
+      console.log (`Loading case detail for ID: ${caseId}`);
+
       // Show loading state
       this.elements.emptyState.classList.add ('hidden');
       this.elements.caseDetail.classList.remove ('hidden');
@@ -272,7 +274,9 @@ class CaseManagement {
         '<div class="p-4 text-gray-500 text-center">加载中...</div>';
 
       // Load case data
+      console.log (`Making API request to: ${this.api.baseUrl}/${caseId}`);
       const caseData = await this.api.getCase (caseId);
+      console.log ('Received case data:', caseData);
       this.selectedCase = caseData;
 
       // Render detail view
@@ -285,7 +289,19 @@ class CaseManagement {
   }
 
   renderCaseDetail () {
-    if (!this.selectedCase) return;
+    console.log ('Rendering case detail for:', this.selectedCase);
+
+    if (!this.selectedCase) {
+      console.error ('No selected case to render');
+      return;
+    }
+
+    // Log DOM elements before manipulation
+    console.log ('DOM elements:', {
+      caseDetail: this.elements.caseDetail,
+      emptyState: this.elements.emptyState,
+      caseInfoForm: this.elements.caseInfoForm,
+    });
 
     // Reset case detail view
     this.elements.caseDetail.innerHTML = '';
@@ -296,6 +312,8 @@ class CaseManagement {
 
     // Fill form fields
     const form = this.elements.caseInfoForm;
+    console.log ('Form element:', form);
+
     if (form) {
       const nameInput = form.querySelector ('#case-name');
       const phoneInput = form.querySelector ('#case-phone');
@@ -303,6 +321,15 @@ class CaseManagement {
       const statusSelect = form.querySelector ('#case-status');
       const caseNumberInput = form.querySelector ('#case-number');
       const createTimeInput = form.querySelector ('#case-create-time');
+
+      console.log ('Form inputs:', {
+        nameInput,
+        phoneInput,
+        typeSelect,
+        statusSelect,
+        caseNumberInput,
+        createTimeInput,
+      });
 
       if (nameInput) nameInput.value = this.selectedCase.name;
       if (phoneInput) phoneInput.value = this.selectedCase.phone;
@@ -314,6 +341,8 @@ class CaseManagement {
         createTimeInput.value = this.formatDateTime (
           this.selectedCase.create_time
         );
+    } else {
+      console.error ('Form element not found');
     }
 
     // Render documents list
