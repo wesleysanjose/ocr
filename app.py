@@ -2,13 +2,16 @@ from flask import Flask
 from flask_cors import CORS
 import os
 from pathlib import Path
+import asyncio
+
 
 from config.settings import config
 from utils.logger import setup_logger
-#from core.ocr import OCRProcessor
 from core.ocr.factory import OCREngineFactory
 from core.analyzer import DocumentAnalyzer
 from api.routes import init_api
+from api.case_routes import init_case_api
+from database import db
 
 def create_app(config_name='default'):
     """Application factory"""
@@ -33,10 +36,23 @@ def create_app(config_name='default'):
     # ocr_processor = OCRProcessor(app_config)
     document_analyzer = DocumentAnalyzer(app_config)
 
+    # Set up database connection
+    @app.before_first_request
+    async def setup_db():
+        await db.connect_db()
+
+    @app.teardown_appcontext
+    async def close_db_connection(exception):
+        await db.close_db()
+
     # Register blueprints
     api_bp = init_api(ocr_engine, document_analyzer, app_config)
     app.register_blueprint(api_bp, url_prefix='/api')
     
+    # Register case management routes
+    case_bp = init_case_api(db.db, ocr_engine, document_analyzer, app_config)
+    app.register_blueprint(case_bp, url_prefix='/api/cases')
+
     @app.route('/')
     def index():
         return app.send_static_file('index.html')

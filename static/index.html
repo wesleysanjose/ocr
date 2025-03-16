@@ -3,75 +3,422 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="医疗报告OCR分析工具" />
-    <title>医疗报告OCR分析工具</title>
+    <meta name="description" content="伤残鉴定案件管理系统" />
+    <title>伤残鉴定案件管理系统</title>
 
     <!-- External CSS -->
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@tailwindcss/typography@0.5.0/dist/typography.min.css"
-    />
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/main.css" />
+    <style>
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+      }
+
+      .active-tab {
+        color: #2563eb;
+        border-bottom: 2px solid #2563eb;
+      }
+
+      .loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+        color: #6b7280;
+      }
+
+      .loading:after {
+        content: " ";
+        display: block;
+        width: 20px;
+        height: 20px;
+        margin-left: 10px;
+        border-radius: 50%;
+        border: 2px solid #6b7280;
+        border-color: #6b7280 transparent #6b7280 transparent;
+        animation: loading 1.2s linear infinite;
+      }
+
+      @keyframes loading {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+        color: #6b7280;
+      }
+    </style>
   </head>
-  <body class="min-h-screen bg-gray-50 p-4">
-    <!-- Main Grid Layout -->
-    <div class="grid grid-cols-3 gap-4">
-      <!-- Left Column: File Upload & Preview -->
-      <section id="upload-section" class="col-span-1">
-        <!-- File Upload Component -->
-        <div class="bg-white p-4 rounded-lg shadow">
-          <!-- Component Header -->
-          <header class="mb-4">
-            <h2 class="text-lg font-semibold">上传文件</h2>
-          </header>
-
-          <!-- Upload Form -->
-          <form id="upload-form">
-            <!-- Upload Drop Zone -->
-            <div
-              class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center"
+  <body class="bg-gray-100 min-h-screen">
+    <div class="flex h-screen">
+      <!-- 左侧案件列表 -->
+      <div class="w-1/3 bg-white p-4 border-r shadow-sm overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold">案件列表</h2>
+          <button
+            id="new-case-btn"
+            class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
             >
-              <input
-                type="file"
-                id="file-upload"
-                accept=".jpg,.jpeg,.png,.pdf"
-                class="hidden"
+              <path
+                fill-rule="evenodd"
+                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                clip-rule="evenodd"
               />
-              <label
-                for="file-upload"
-                class="cursor-pointer text-blue-500 hover:text-blue-600"
-              >
-                <p>点击或拖拽上传文件</p>
-                <p class="text-sm text-gray-500">支持 PDF 或图片格式</p>
-              </label>
-            </div>
-          </form>
+            </svg>
+            <span>新建案件</span>
+          </button>
+        </div>
 
-          <!-- Upload Status -->
-          <div id="upload-status" class="mt-4 text-center hidden">
-            <p class="text-blue-500">正在处理文档...</p>
+        <!-- 搜索框 -->
+        <div class="relative mb-4">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 absolute left-3 top-3 text-gray-400"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          <input
+            type="text"
+            id="search-input"
+            placeholder="搜索案件编号/姓名"
+            class="w-full pl-10 pr-4 py-2 border rounded-lg"
+          />
+        </div>
+
+        <!-- 状态过滤导航栏 -->
+        <div id="status-tabs" class="flex gap-2 mb-4 border-b overflow-x-auto">
+          <button
+            data-status="全部"
+            class="px-4 py-2 text-blue-600 border-b-2 border-blue-600 active-tab whitespace-nowrap"
+          >
+            全部
+          </button>
+          <button
+            data-status="待处理"
+            class="px-4 py-2 text-gray-500 hover:text-blue-600 whitespace-nowrap"
+          >
+            待处理
+          </button>
+          <button
+            data-status="进行中"
+            class="px-4 py-2 text-gray-500 hover:text-blue-600 whitespace-nowrap"
+          >
+            进行中
+          </button>
+          <button
+            data-status="待审核"
+            class="px-4 py-2 text-gray-500 hover:text-blue-600 whitespace-nowrap"
+          >
+            待审核
+          </button>
+          <button
+            data-status="已完成"
+            class="px-4 py-2 text-gray-500 hover:text-blue-600 whitespace-nowrap"
+          >
+            已完成
+          </button>
+        </div>
+
+        <!-- 案件列表 -->
+        <div id="case-list" class="space-y-3">
+          <!-- 列表内容会通过JavaScript动态加载 -->
+          <div class="loading">加载中...</div>
+        </div>
+
+        <!-- 分页 -->
+        <div id="pagination" class="flex justify-center gap-2 mt-4">
+          <!-- 分页内容会通过JavaScript动态加载 -->
+        </div>
+      </div>
+
+      <!-- 右侧案件详情 -->
+      <div id="case-detail" class="flex-1 p-6 overflow-y-auto hidden">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold">案件详情</h2>
+          <div class="space-x-3">
+            <button
+              id="export-report-btn"
+              class="px-4 py-2 border rounded-lg hover:bg-gray-50"
+            >
+              导出报告
+            </button>
+            <button
+              id="save-changes-btn"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              保存修改
+            </button>
+          </div>
+        </div>
+
+        <form id="case-info-form" class="grid grid-cols-2 gap-6">
+          <!-- 基本信息卡片 -->
+          <div class="bg-white p-4 rounded-lg shadow">
+            <h3 class="text-lg font-semibold mb-4">基本信息</h3>
+
+            <div class="space-y-4">
+              <div class="grid grid-cols-1 gap-4">
+                <div>
+                  <label
+                    for="case-name"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >姓名</label
+                  >
+                  <input
+                    type="text"
+                    id="case-name"
+                    name="name"
+                    class="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    for="case-phone"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >联系电话</label
+                  >
+                  <input
+                    type="text"
+                    id="case-phone"
+                    name="phone"
+                    class="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    for="case-type"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >案件类型</label
+                  >
+                  <select
+                    id="case-type"
+                    name="type"
+                    class="w-full p-2 border rounded"
+                  >
+                    <option value="交通事故">交通事故</option>
+                    <option value="工伤认定">工伤认定</option>
+                    <option value="医疗事故">医疗事故</option>
+                    <option value="其他伤害">其他伤害</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    for="case-status"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >案件状态</label
+                  >
+                  <select
+                    id="case-status"
+                    name="status"
+                    class="w-full p-2 border rounded"
+                  >
+                    <option value="待处理">待处理</option>
+                    <option value="进行中">进行中</option>
+                    <option value="待审核">待审核</option>
+                    <option value="已完成">已完成</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    for="case-number"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >案件编号</label
+                  >
+                  <input
+                    type="text"
+                    id="case-number"
+                    class="w-full p-2 border rounded bg-gray-50"
+                    readonly
+                  />
+                </div>
+
+                <div>
+                  <label
+                    for="case-create-time"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >立案时间</label
+                  >
+                  <input
+                    type="text"
+                    id="case-create-time"
+                    class="w-full p-2 border rounded bg-gray-50"
+                    readonly
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- Preview Section -->
-          <div id="preview-section" class="mt-4 hidden">
-            <!-- Preview Header -->
-            <header class="mb-2">
-              <h3 class="text-lg font-semibold">预览</h3>
-            </header>
+          <!-- 文档处理卡片 -->
+          <div class="bg-white p-4 rounded-lg shadow">
+            <h3 class="text-lg font-semibold mb-4">文档处理</h3>
 
-            <!-- Preview Container -->
+            <!-- 文档上传表单 -->
+            <form id="document-upload-form" class="mb-4">
+              <div class="border-2 border-dashed rounded-lg p-6 text-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-8 w-8 mx-auto text-gray-400 mb-2"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <input
+                  type="file"
+                  id="document-file-input"
+                  accept=".jpg,.jpeg,.png,.pdf"
+                  class="hidden"
+                />
+                <label
+                  for="document-file-input"
+                  class="cursor-pointer text-blue-500 hover:text-blue-600"
+                >
+                  <p>点击或拖拽上传文件</p>
+                  <p class="text-sm text-gray-500">支持 PDF 或图片格式</p>
+                </label>
+
+                <div class="mt-3">
+                  <label
+                    for="document-type-select"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >文档类型</label
+                  >
+                  <select
+                    id="document-type-select"
+                    class="w-full p-2 border rounded"
+                  >
+                    <option value="医院病历">医院病历</option>
+                    <option value="事故认定书">事故认定书</option>
+                    <option value="诊断证明">诊断证明</option>
+                    <option value="伤情照片">伤情照片</option>
+                    <option value="其他资料">其他资料</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                id="upload-document-btn"
+                type="submit"
+                class="mt-2 w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                上传文档
+              </button>
+            </form>
+
+            <!-- 已上传文档列表 -->
+            <div>
+              <h4 class="font-medium mb-2">已上传文档</h4>
+              <div
+                id="documents-list"
+                class="max-h-80 overflow-y-auto custom-scrollbar"
+              >
+                <!-- 文档列表会通过JavaScript动态加载 -->
+                <div class="empty-state text-center text-gray-500 py-4">
+                  尚未上传文档
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- 初始状态提示 -->
+      <div
+        id="empty-state"
+        class="flex-1 flex items-center justify-center text-gray-400"
+      >
+        <p>请选择一个案件查看详情</p>
+      </div>
+    </div>
+
+    <!-- 文档查看器 -->
+    <div
+      id="document-viewer"
+      class="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 hidden"
+    >
+      <div class="container mx-auto h-full py-6 px-4 flex flex-col">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-white" id="document-title">
+            文档查看
+          </h2>
+          <button id="close-viewer" class="text-white hover:text-gray-300">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 flex-1 overflow-hidden">
+          <!-- 左侧预览 -->
+          <div id="preview-section" class="bg-white rounded-lg shadow p-4">
             <div class="relative border rounded-lg p-2 bg-white">
               <div
                 class="overflow-auto custom-scrollbar"
-                style="max-height: 400px"
+                style="max-height: 80vh"
               >
-                <div id="preview-container" class="relative">
+                <div class="relative">
                   <img
                     id="preview-image"
                     class="max-w-full transition-transform duration-200"
@@ -81,7 +428,7 @@
                 </div>
               </div>
 
-              <!-- Zoom Controls -->
+              <!-- 缩放控制 -->
               <div class="mt-2 flex justify-center gap-4 items-center">
                 <button
                   id="zoom-out"
@@ -101,10 +448,10 @@
               </div>
             </div>
 
-            <!-- Page Navigation -->
+            <!-- 页面导航 -->
             <div
               id="page-nav"
-              class="mt-2 flex justify-center gap-4 items-center hidden"
+              class="mt-2 flex justify-center gap-4 items-center"
             >
               <button
                 id="prev-page"
@@ -123,129 +470,205 @@
               </button>
             </div>
           </div>
-        </div>
-      </section>
 
-      <!-- Middle Column: OCR Results -->
-      <section id="ocr-section" class="col-span-1">
-        <div class="bg-white p-4 rounded-lg shadow">
-          <!-- OCR Results Header -->
-          <header class="mb-4">
-            <h2 class="text-lg font-semibold">原始扫描结果</h2>
-          </header>
+          <!-- 中间OCR结果 -->
+          <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-lg font-semibold mb-4">OCR 识别结果</h3>
 
-          <!-- OCR Results Display -->
-          <div
-            id="ocr-results"
-            class="w-full h-48 p-2 border border-gray-300 rounded mb-2 overflow-auto custom-scrollbar"
-          ></div>
-          <!-- Process Button -->
-          <div class="mb-2">
-            <button
-              id="process-btn"
-              class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-              disabled
-            >
-              处理
-            </button>
-          </div>
-          <!-- Processed Results -->
-          <div class="mb-2">
-            <h3 class="text-md font-semibold mb-2">复核后结果</h3>
+            <!-- OCR结果显示 -->
             <div
-              id="kv-display"
-              class="w-full border border-gray-300 rounded p-2 h-96 overflow-auto custom-scrollbar"
+              id="ocr-results"
+              class="w-full h-48 p-2 border border-gray-300 rounded mb-2 overflow-auto custom-scrollbar"
             ></div>
+
+            <!-- 处理按钮 -->
+            <div class="mb-2">
+              <button
+                id="process-btn"
+                class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                disabled
+              >
+                处理
+              </button>
+            </div>
+
+            <!-- 处理后结果 -->
+            <div class="mb-2">
+              <h3 class="text-md font-semibold mb-2">结构化信息</h3>
+              <div
+                id="kv-display"
+                class="w-full border border-gray-300 rounded p-2 h-60 overflow-auto custom-scrollbar"
+              ></div>
+            </div>
+
+            <!-- 保存按钮 -->
+            <button
+              id="save-to-case"
+              class="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              保存到案件
+            </button>
+          </div>
+
+          <!-- 右侧分析 -->
+          <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-lg font-semibold mb-4">AI 分析</h3>
+
+            <!-- 分析控制 -->
+            <div class="mb-2">
+              <button
+                id="analyze-btn"
+                class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                disabled
+              >
+                分析文本
+              </button>
+            </div>
+
+            <!-- 分析结果 -->
+            <div class="mb-2">
+              <div
+                id="analysis-results"
+                class="w-full h-72 p-4 border border-gray-300 rounded overflow-auto prose prose-sm max-w-none"
+              ></div>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
+    </div>
 
-      <!-- Right Column: AI Analysis -->
-      <section id="analysis-section" class="col-span-1">
-        <div class="bg-white p-4 rounded-lg shadow">
-          <!-- Analysis Header -->
-          <header class="mb-4">
-            <h2 class="text-lg font-semibold">人工智能错误分析</h2>
-          </header>
-          <!-- Prompt Editor -->
-          <div class="mb-4">
-            <label
-              for="analysis-prompt"
-              class="block text-sm font-medium text-gray-700 mb-2"
-            >
-              分析提示词
-            </label>
-            <textarea
-              id="analysis-prompt"
-              class="w-full h-32 p-2 border border-gray-300 rounded mb-2 text-sm resize-y"
-              placeholder="输入分析提示词..."
-            ></textarea>
-            <button
-              id="reset-prompt-btn"
-              class="text-sm text-blue-600 hover:text-blue-800"
-            >
-              重置为默认提示词
-            </button>
+    <!-- 新建/编辑案件模态框 -->
+    <div
+      id="case-form-modal"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-40"
+    >
+      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h2 id="form-title" class="text-xl font-bold mb-4">新建案件</h2>
+
+        <form id="case-form">
+          <div class="space-y-4">
+            <div>
+              <label
+                for="case-name-input"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >姓名</label
+              >
+              <input
+                type="text"
+                id="case-name-input"
+                class="w-full p-2 border rounded"
+                required
+              />
+            </div>
+
+            <div>
+              <label
+                for="case-phone-input"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >联系电话</label
+              >
+              <input
+                type="text"
+                id="case-phone-input"
+                class="w-full p-2 border rounded"
+                required
+              />
+            </div>
+
+            <div>
+              <label
+                for="case-type-select"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >案件类型</label
+              >
+              <select id="case-type-select" class="w-full p-2 border rounded">
+                <option value="交通事故">交通事故</option>
+                <option value="工伤认定">工伤认定</option>
+                <option value="医疗事故">医疗事故</option>
+                <option value="其他伤害">其他伤害</option>
+              </select>
+            </div>
+
+            <div>
+              <label
+                for="case-status-select"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >案件状态</label
+              >
+              <select id="case-status-select" class="w-full p-2 border rounded">
+                <option value="待处理">待处理</option>
+                <option value="进行中">进行中</option>
+                <option value="待审核">待审核</option>
+                <option value="已完成">已完成</option>
+              </select>
+            </div>
           </div>
 
-          <!-- Analysis Controls -->
-          <div class="mb-2 flex items-center space-x-2">
+          <div class="mt-6 flex justify-end gap-2">
             <button
-              id="analyze-btn"
-              class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-              disabled
-            >
-              分析文本
-            </button>
-            <button
-              id="cancel-analyze-btn"
-              class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed hidden"
+              type="button"
+              id="cancel-case-btn"
+              class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
             >
               取消
             </button>
+            <button
+              type="submit"
+              id="save-case-btn"
+              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              保存
+            </button>
           </div>
-
-          <!-- Analysis Results -->
-          <div class="mb-2">
-            <div
-              id="analysis-results"
-              class="w-full h-96 p-4 border border-gray-300 rounded overflow-auto prose prose-sm max-w-none"
-            ></div>
-          </div>
-        </div>
-      </section>
+        </form>
+      </div>
     </div>
 
-    <!-- Modal Component -->
+    <!-- 信息字段添加/编辑模态框 -->
     <div
       id="key-input-modal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50"
     >
-      <div class="bg-white p-4 rounded-lg shadow-lg">
-        <header class="mb-4">
-          <h3 class="text-lg font-semibold">复核确认</h3>
-        </header>
+      <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+        <h3 class="text-lg font-semibold mb-4">编辑信息</h3>
 
-        <!-- Modal Content -->
+        <!-- 模态框内容 -->
         <div class="mb-4">
           <p class="mb-2">
             已选择文本:
             <span id="modal-selected-text" class="font-mono text-sm"></span>
           </p>
-          <input
-            type="text"
-            id="key-input"
-            class="w-full p-2 border border-gray-300 rounded mb-4"
-            placeholder="输入抬头"
-          />
-          <textarea
-            id="value-input"
-            class="w-full p-2 border border-gray-300 rounded mb-4 resize-y min-h-32"
-            placeholder="输入内容"
-          ></textarea>
+
+          <div class="mb-3">
+            <label
+              for="key-input"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >字段名称</label
+            >
+            <input
+              type="text"
+              id="key-input"
+              class="w-full p-2 border border-gray-300 rounded mb-1"
+              placeholder="字段名称"
+            />
+          </div>
+
+          <div>
+            <label
+              for="value-input"
+              class="block text-sm font-medium text-gray-700 mb-1"
+              >字段内容</label
+            >
+            <textarea
+              id="value-input"
+              class="w-full p-2 border border-gray-300 rounded resize-y"
+              rows="4"
+              placeholder="字段内容"
+            ></textarea>
+          </div>
         </div>
 
-        <!-- Modal Actions -->
+        <!-- 模态框操作 -->
         <div class="flex justify-end gap-2">
           <button
             id="modal-cancel"
@@ -263,15 +686,13 @@
       </div>
     </div>
 
-    <!-- External Libraries -->
+    <!-- 引入脚本 -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
-    <!-- Application Scripts -->
     <script src="js/config.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/preview.js"></script>
-    <script src="js/ocr.js"></script>
-    <script src="js/analysis.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/case_api.js"></script>
+    <script src="js/case_management.js"></script>
+    <script src="js/case_document_viewer.js"></script>
+    <script src="js/case_form.js"></script>
+    <script src="js/index.js"></script>
   </body>
 </html>
