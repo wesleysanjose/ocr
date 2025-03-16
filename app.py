@@ -47,9 +47,9 @@ def create_app(config_name='default'):
     api_bp = init_api(ocr_engine, document_analyzer, app_config)
     app.register_blueprint(api_bp, url_prefix='/api')
     
-    # Register case management routes
+    # Register case management routes - fix the URL prefix
     case_bp = init_case_api(db.db, ocr_engine, document_analyzer, app_config)
-    app.register_blueprint(case_bp, url_prefix='/api/cases')
+    app.register_blueprint(case_bp)  # Remove duplicate prefix since case_bp already has url_prefix='/cases'
 
     @app.route('/')
     def index():
