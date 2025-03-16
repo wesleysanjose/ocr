@@ -46,7 +46,7 @@ def create_app(config_name='default'):
     
     # Register case management routes with the /api prefix
     case_bp = init_case_api(db.db, ocr_engine, document_analyzer, app_config)
-    app.register_blueprint(case_bp, url_prefix='/api')
+    app.register_blueprint(case_bp, url_prefix='/api/cases')
 
     @app.route('/')
     def index():
