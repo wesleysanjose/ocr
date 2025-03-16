@@ -11,9 +11,9 @@ class Database:
 
     def connect_db(self, connection_uri="mongodb://localhost:27017", db_name="disability_assessment"):
         """Connect to MongoDB using synchronous PyMongo driver"""
-        # Previously was async def connect_db
-        if self.client is None:
-            try:
+        try:
+            # Only create a new connection if we don't already have one
+            if self.client is None:
                 logger.info(f"Connecting to MongoDB at {connection_uri}")
                 self.client = MongoClient(connection_uri)
                 self.db = self.client[db_name]
@@ -25,11 +25,10 @@ class Database:
                 self.db.cases.create_index([("name", ASCENDING)])
                 
                 logger.info(f"Connected to MongoDB at {connection_uri}, database: {db_name}")
-                return self.db
-            except Exception as e:
-                logger.error(f"Database connection error: {e}")
-                raise
-        return self.db
+            return self.db
+        except Exception as e:
+            logger.error(f"Database connection error: {e}")
+            raise
 
     def close_db(self):
         """Close database connection"""

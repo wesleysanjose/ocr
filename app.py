@@ -3,6 +3,7 @@ from flask import Flask
 from flask_cors import CORS
 import os
 from pathlib import Path
+import atexit
 
 from config.settings import config
 from utils.logger import setup_logger
@@ -29,16 +30,15 @@ def create_app(config_name='default'):
     # Connect to database synchronously
     db.connect_db()
     
+    # Register a function to close the database connection when the application exits
+    atexit.register(db.close_db)
+    
     # Ensure required directories exist
     Path(app.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
     
     # Initialize core components
     ocr_engine = OCREngineFactory.create(app_config.OCR_ENGINE, app_config)
     document_analyzer = DocumentAnalyzer(app_config)
-
-    @app.teardown_appcontext
-    def close_db_connection(exception):
-        db.close_db()
 
     # Register blueprints
     api_bp = init_api(ocr_engine, document_analyzer, app_config)
@@ -68,4 +68,4 @@ def main():
     )
 
 if __name__ == '__main__':
-    main()
+    main();
