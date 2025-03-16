@@ -1,6 +1,7 @@
 // static/js/case_management.js - Handles case management UI logic
 class CaseManagement {
   constructor () {
+    console.log ('Initializing CaseManagement');
     this.api = window.caseAPI;
     this.currentPage = 1;
     this.pageSize = 20;
@@ -12,9 +13,13 @@ class CaseManagement {
     this.initElements ();
     this.bindEvents ();
     this.loadCases ();
+
+    console.log ('CaseManagement initialized');
   }
 
   initElements () {
+    console.log ('Initializing CaseManagement elements');
+
     // Case list elements
     this.elements = {
       caseList: document.getElementById ('case-list'),
@@ -30,7 +35,7 @@ class CaseManagement {
       saveChangesBtn: document.getElementById ('save-changes-btn'),
       exportReportBtn: document.getElementById ('export-report-btn'),
 
-      // Document upload
+      // Document upload - note we're being more explicit about getting elements
       uploadForm: document.getElementById ('document-upload-form'),
       fileInput: document.getElementById ('document-file-input'),
       documentTypeSelect: document.getElementById ('document-type-select'),
@@ -38,14 +43,19 @@ class CaseManagement {
       documentsList: document.getElementById ('documents-list'),
     };
 
-    // Log the elements to verify they're found
-    console.log ('Initialized elements:', {
-      caseDetail: this.elements.caseDetail,
-      emptyState: this.elements.emptyState,
-      caseInfoForm: this.elements.caseInfoForm,
+    // Log the elements we found for debugging
+    console.log ('CaseManagement elements:', {
+      caseList: !!this.elements.caseList,
+      statusTabs: !!this.elements.statusTabs,
+      caseDetail: !!this.elements.caseDetail,
+      uploadForm: !!this.elements.uploadForm,
+      fileInput: !!this.elements.fileInput,
+      documentTypeSelect: !!this.elements.documentTypeSelect,
+      uploadBtn: !!this.elements.uploadBtn,
+      documentsList: !!this.elements.documentsList,
     });
 
-    // Check if any elements are missing
+    // Log missing elements
     const missingElements = [];
     for (const [key, value] of Object.entries (this.elements)) {
       if (!value) {
@@ -54,7 +64,7 @@ class CaseManagement {
     }
 
     if (missingElements.length > 0) {
-      console.error ('Missing DOM elements:', missingElements);
+      console.error ('Missing CaseManagement elements:', missingElements);
     }
   }
 
@@ -521,10 +531,19 @@ class CaseManagement {
   async uploadDocument () {
     if (!this.selectedCase) {
       console.error ('No case selected for document upload');
+      this.showToast ('请先选择案件', 'error');
       return;
     }
 
-    const fileInput = this.elements.fileInput;
+    console.log ('Starting document upload for case:', this.selectedCase.id);
+
+    // Use document upload form from case detail
+    const fileInput = document.getElementById ('document-file-input');
+    const documentTypeSelect = document.getElementById ('document-type-select');
+
+    console.log ('File input element:', fileInput);
+    console.log ('Document type select element:', documentTypeSelect);
+
     if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
       console.error ('No file selected for upload');
       this.showToast ('请选择文件', 'error');
@@ -532,15 +551,21 @@ class CaseManagement {
     }
 
     const file = fileInput.files[0];
-    const documentType = this.elements.documentTypeSelect.value;
+    const documentType = documentTypeSelect ? documentTypeSelect.value : '待分类';
+
     console.log (
-      `Uploading file: ${file.name}, type: ${file.type}, size: ${file.size}, document type: ${documentType}`
+      `Uploading file: ${file.name}, type: ${file.type}, size: ${file.size}bytes, document type: ${documentType}`
     );
 
     try {
+      // Get upload button
+      const uploadBtn = document.getElementById ('upload-document-btn');
+
       // Disable button
-      this.elements.uploadBtn.disabled = true;
-      this.elements.uploadBtn.textContent = '上传中...';
+      if (uploadBtn) {
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = '上传中...';
+      }
 
       // Create FormData object
       const formData = new FormData ();
@@ -581,8 +606,11 @@ class CaseManagement {
       this.showToast ('上传失败: ' + error.message, 'error');
     } finally {
       // Reset button
-      this.elements.uploadBtn.disabled = false;
-      this.elements.uploadBtn.textContent = '上传文档';
+      const uploadBtn = document.getElementById ('upload-document-btn');
+      if (uploadBtn) {
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = '上传文档';
+      }
     }
   }
 
@@ -723,6 +751,121 @@ function getEventListeners (element) {
     return 'Cannot access event listeners (not supported in this browser)';
   }
 }
+
+// Add this to your case_management.js file
+
+function setupDirectDocumentUpload () {
+  console.log ('Setting up direct document upload handler');
+
+  // Find the document upload elements
+  const fileInput = document.getElementById ('document-file-input');
+  const uploadBtn = document.getElementById ('upload-document-btn');
+  const documentTypeSelect = document.getElementById ('document-type-select');
+
+  console.log ('Document upload elements:', {
+    fileInput: !!fileInput,
+    uploadBtn: !!uploadBtn,
+    documentTypeSelect: !!documentTypeSelect,
+  });
+
+  if (!fileInput || !uploadBtn) {
+    console.error ('Document upload elements not found');
+    return;
+  }
+
+  // Set up file input change handler
+  fileInput.addEventListener ('change', function (event) {
+    const file = event.target.files[0];
+    console.log (`File selected: ${file ? file.name : 'none'}`);
+
+    // Update UI to show selected file
+    if (file) {
+      const fileName = document.createElement ('div');
+      fileName.className = 'mt-2 text-sm text-gray-600';
+      fileName.innerHTML = `已选择: <span class="font-medium">${file.name}</span>`;
+
+      // Remove previous file name display if it exists
+      const prevFileName = fileInput.parentElement.querySelector ('.text-sm');
+      if (prevFileName) {
+        prevFileName.remove ();
+      }
+
+      fileInput.parentElement.appendChild (fileName);
+    }
+  });
+
+  // Set up drag and drop
+  const dropZone = fileInput.parentElement;
+  if (dropZone) {
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach (eventName => {
+      dropZone.addEventListener (eventName, preventDefaults, false);
+    });
+
+    // Highlight drop zone when item is dragged over it
+    ['dragenter', 'dragover'].forEach (eventName => {
+      dropZone.addEventListener (eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach (eventName => {
+      dropZone.addEventListener (eventName, unhighlight, false);
+    });
+
+    // Handle dropped files
+    dropZone.addEventListener ('drop', handleDrop, false);
+  }
+
+  // Set up upload button click handler
+  uploadBtn.addEventListener ('click', async function (event) {
+    event.preventDefault ();
+
+    // Check if we have a case management instance
+    if (!window.caseManagement) {
+      console.error ('Case management instance not found');
+      alert ('系统错误，请刷新页面重试');
+      return;
+    }
+
+    // Use the case management upload method
+    window.caseManagement.uploadDocument ();
+  });
+
+  // Helper functions for drag and drop
+  function preventDefaults (e) {
+    e.preventDefault ();
+    e.stopPropagation ();
+  }
+
+  function highlight () {
+    dropZone.classList.add ('border-blue-500');
+    dropZone.classList.add ('bg-blue-50');
+  }
+
+  function unhighlight () {
+    dropZone.classList.remove ('border-blue-500');
+    dropZone.classList.remove ('bg-blue-50');
+  }
+
+  function handleDrop (e) {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+
+    if (files.length > 0) {
+      fileInput.files = files;
+      // Trigger change event
+      const event = new Event ('change', {bubbles: true});
+      fileInput.dispatchEvent (event);
+    }
+  }
+
+  console.log ('Document upload handler setup complete');
+}
+
+// Call this after loading case details
+document.addEventListener ('DOMContentLoaded', function () {
+  console.log ('DOM content loaded, checking for document upload elements');
+  setTimeout (setupDirectDocumentUpload, 1000); // Give time for other scripts to load
+});
 
 // Export class
 window.CaseManagement = CaseManagement;
