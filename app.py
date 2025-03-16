@@ -12,6 +12,7 @@ from core.analyzer import DocumentAnalyzer
 from api.routes import init_api
 from api.case_routes import init_case_api
 from database import db
+from flask import send_from_directory
 
 def create_app(config_name='default'):
     """Application factory"""
@@ -52,6 +53,11 @@ def create_app(config_name='default'):
     def index():
         return app.send_static_file('index.html')
     
+    @app.route('/uploads/<path:filename>')
+    def serve_upload(filename):
+        """Serve uploaded files"""
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
     return app
 
 def main():

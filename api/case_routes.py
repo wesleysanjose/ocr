@@ -7,6 +7,9 @@ from datetime import datetime
 import uuid
 import os
 from pathlib import Path
+import json
+import base64
+from werkzeug.utils import secure_filename
 
 # Import your OCR processor and document analyzer
 from core.ocr.factory import OCREngineFactory
@@ -197,15 +200,9 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
         """Upload document to a case and process with OCR"""
         logger.info(f"POST /cases/{case_id}/documents - Uploading document")
         try:
-            # Log request details
-            logger.info(f"Request headers: {dict(request.headers)}")
-            logger.info(f"Request form data: {dict(request.form)}")
-            logger.info(f"Request files: {request.files.keys()}")
-            
             # Validate ObjectId
             try:
                 obj_id = ObjectId(case_id)
-                logger.info(f"Valid ObjectId: {obj_id}")
             except bson_errors.InvalidId:
                 logger.warning(f"Invalid case ID format: {case_id}")
                 return jsonify({'error': 'Invalid case ID format'}), 400
@@ -215,8 +212,6 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
             if not case:
                 logger.warning(f"Case not found: {case_id}")
                 return jsonify({'error': 'Case not found'}), 404
-            else:
-                logger.info(f"Found case: {case['case_number']}")
                 
             if 'file' not in request.files:
                 logger.warning("No file in request")
@@ -227,53 +222,94 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
                 logger.warning("Empty filename")
                 return jsonify({'error': 'No file selected'}), 400
                 
-            logger.info(f"File upload: {file.filename}, content type: {file.content_type}, size: {len(file.read())} bytes")
-            # Reset file cursor after reading size
-            file.seek(0)  
+            logger.info(f"File upload: {file.filename}, content type: {file.content_type}")
                 
             if not allowed_file(file.filename, config.ALLOWED_EXTENSIONS):
                 logger.warning(f"File type not allowed: {file.filename}")
                 return jsonify({'error': f"File type not allowed. Allowed types: {', '.join(config.ALLOWED_EXTENSIONS)}"}), 400
                 
-            # Create upload directory
-            upload_dir = create_upload_dir(Path(config.UPLOAD_FOLDER) / case_id)
-            logger.debug(f"Created upload directory: {upload_dir}")
+            # Create document ID early to use in path names
+            doc_id = str(uuid.uuid4())
             
-            filename = str(uuid.uuid4()) + '_' + file.filename
-            filepath = upload_dir / filename
+            # Create storage directory structure: UPLOAD_FOLDER/case_id/doc_id
+            doc_storage_dir = Path(config.UPLOAD_FOLDER) / case_id / doc_id
+            doc_storage_dir.mkdir(parents=True, exist_ok=True)
+            logger.debug(f"Created document storage directory: {doc_storage_dir}")
             
-            # Save file
-            logger.debug(f"Saving file to: {filepath}")
-            file.save(filepath)
-            logger.info(f"File saved successfully: {filepath}")
+            # Create pages directory for multi-page documents
+            pages_dir = doc_storage_dir / "pages"
+            pages_dir.mkdir(exist_ok=True)
+            
+            # Save original file
+            original_filename = secure_filename(file.filename)
+            original_file_path = doc_storage_dir / original_filename
+            file.save(original_file_path)
+            logger.debug(f"Saved original file to: {original_file_path}")
             
             # Process file with OCR
-            logger.info(f"Starting OCR processing for file: {filename}")
-            try:
-                if filename.lower().endswith('.pdf'):
-                    logger.debug("Processing as PDF")
-                    pages_data = ocr_processor.process_pdf(filepath, upload_dir)
-                    is_pdf = True
-                else:
-                    logger.debug("Processing as image")
-                    pages_data = ocr_processor.process_image(filepath)
-                    is_pdf = False
-                    
-                logger.info(f"OCR processing complete, extracted {len(pages_data)} pages")
+            logger.info(f"Starting OCR processing for file: {original_filename}")
+            
+            # Process according to file type
+            is_pdf = original_filename.lower().endswith('.pdf')
+            
+            if is_pdf:
+                logger.debug("Processing as PDF")
+                # For PDF, pages will be saved to the pages directory
+                pages_data = ocr_processor.process_pdf(original_file_path, pages_dir)
+            else:
+                logger.debug("Processing as image")
+                # For single images, process and save preview to pages directory
+                pages_data = ocr_processor.process_image(original_file_path)
                 
-                # Log sample of OCR results
-                if pages_data and len(pages_data) > 0:
-                    first_page = pages_data[0]
-                    raw_sample = first_page.get('raw', '')[:200]  # First 200 chars
-                    logger.debug(f"OCR sample from first page: {raw_sample}...")
+                # Save preview image if it's in base64 format
+                if pages_data and len(pages_data) > 0 and 'preview' in pages_data[0]:
+                    preview_data = pages_data[0]['preview']
+                    if preview_data.startswith('data:image/jpeg;base64,'):
+                        preview_data = preview_data.split(',', 1)[1]
+                        preview_path = pages_dir / "page_1.jpg"
+                        with open(preview_path, 'wb') as f:
+                            f.write(base64.b64decode(preview_data))
+                        logger.debug(f"Saved single image preview to: {preview_path}")
+                        # Update preview URL in the data
+                        pages_data[0]['preview'] = f"/uploads/{case_id}/{doc_id}/pages/page_1.jpg"
+            
+            logger.info(f"OCR processing complete, extracted {len(pages_data)} pages")
+            
+            # Create page references for all pages
+            page_urls = []
+            for i, page_data in enumerate(pages_data, 1):
+                # Update page URLs for all pages
+                page_url = f"/uploads/{case_id}/{doc_id}/pages/page_{i}.jpg"
                 
-            except Exception as ocr_error:
-                logger.error(f"OCR processing error: {str(ocr_error)}")
-                logger.error(traceback.format_exc())
-                return jsonify({'error': f"OCR processing error: {str(ocr_error)}"}), 500
+                # Update the preview URL in the data
+                page_data['preview'] = page_url
                 
-            # Combine text from all pages
+                # Add to page URLs list
+                page_urls.append({
+                    'page_number': i,
+                    'url': page_url
+                })
+            
+            # Extract text from all pages
             raw_text = '\n'.join([page.get('raw', '') for page in pages_data])
+            
+            # Save raw text to file
+            raw_text_path = doc_storage_dir / "raw_text.txt"
+            with open(raw_text_path, 'w', encoding='utf-8') as f:
+                f.write(raw_text)
+            logger.debug(f"Saved raw text to: {raw_text_path}")
+            
+            # Save OCR data to file
+            ocr_data_path = doc_storage_dir / "ocr_data.json"
+            ocr_data = {
+                'is_pdf': is_pdf,
+                'total_pages': len(pages_data),
+                'pages': pages_data
+            }
+            
+            with open(ocr_data_path, 'w', encoding='utf-8') as f:
+                json.dump(ocr_data, f, ensure_ascii=False)
+            logger.debug(f"Saved OCR data to: {ocr_data_path}")
             
             # Analyze text if requested
             ai_analysis = None
@@ -282,31 +318,37 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
                 logger.info("Starting AI analysis of document text")
                 try:
                     ai_analysis = document_analyzer.analyze_text(raw_text)
-                    logger.debug("AI analysis complete")
+                    
+                    # Save analysis results
+                    if ai_analysis:
+                        analysis_path = doc_storage_dir / "analysis.txt"
+                        with open(analysis_path, 'w', encoding='utf-8') as f:
+                            f.write(ai_analysis)
+                        logger.debug(f"Saved AI analysis to: {analysis_path}")
                 except Exception as analysis_error:
                     logger.error(f"AI analysis error: {str(analysis_error)}")
                     logger.error(traceback.format_exc())
                     # Continue without analysis result
             
-            # Create document record
+            # Create document record for database with file paths
             document = {
-                'id': str(uuid.uuid4()),
-                'filename': file.filename,
+                'id': doc_id,
+                'filename': original_filename,
                 'file_type': file.content_type,
                 'upload_time': datetime.now(),
                 'document_type': request.form.get('document_type', '待分类'),
-                'preview_url': pages_data[0]['preview'] if pages_data else None,
-                'ocr_data': {
-                    'is_pdf': is_pdf,
-                    'total_pages': len(pages_data),
-                    'pages': pages_data
-                },
-                'raw_text': raw_text,
-                'ai_analysis': ai_analysis
+                'preview_url': page_urls[0]['url'] if page_urls else None,  # First page as preview
+                'storage_path': str(doc_storage_dir),
+                'raw_text_sample': raw_text[:500] if raw_text else "",
+                'raw_text_length': len(raw_text) if raw_text else 0,
+                'has_ai_analysis': bool(ai_analysis),
+                'is_pdf': is_pdf,
+                'total_pages': len(pages_data),
+                'page_urls': page_urls  # Store all page URLs in MongoDB
             }
             
             # Add document to case
-            logger.debug(f"Adding document to case: {case_id}")
+            logger.debug(f"Adding document reference to case: {case_id}")
             update_result = db.cases.update_one(
                 {'_id': obj_id},
                 {
@@ -317,10 +359,13 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
             
             logger.info(f"Document added to case, modified: {update_result.modified_count}")
             
-            return jsonify({
+            # For the response, include metadata and first page info
+            response_data = {
                 'document': document,
-                'pages_data': pages_data
-            })
+                'first_page': pages_data[0] if pages_data else None
+            }
+            
+            return jsonify(response_data)
             
         except Exception as e:
             logger.error(f"Error uploading document to case {case_id}: {str(e)}")
@@ -329,9 +374,13 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
     
     @case_bp.route('/<case_id>/documents/<document_id>', methods=['GET'])
     def get_document(case_id, document_id):
-        """Get document details"""
+        """Get document details with OCR data"""
         logger.info(f"GET /cases/{case_id}/documents/{document_id} - Retrieving document")
         try:
+            # Get query parameters
+            include_ocr = request.args.get('include_ocr', 'false').lower() == 'true'
+            include_raw_text = request.args.get('include_raw_text', 'false').lower() == 'true'
+            
             # Validate ObjectId
             try:
                 obj_id = ObjectId(case_id)
@@ -339,6 +388,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
                 logger.warning(f"Invalid case ID format: {case_id}")
                 return jsonify({'error': 'Invalid case ID format'}), 400
                 
+            # Find case with document
             case = db.cases.find_one({
                 '_id': obj_id,
                 'documents.id': document_id
@@ -348,9 +398,63 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
                 logger.warning(f"Document not found: case_id={case_id}, document_id={document_id}")
                 return jsonify({'error': 'Document not found'}), 404
                 
+            # Extract document from case
             document = next((doc for doc in case['documents'] if doc['id'] == document_id), None)
             logger.debug(f"Found document: {document_id}")
-            return jsonify(document)
+            
+            # Make a copy to avoid modifying the original
+            response_doc = document.copy()
+            
+            # If storage path exists, load additional data as requested
+            if 'storage_path' in document:
+                storage_path = Path(document['storage_path'])
+                
+                if include_ocr:
+                    # Load OCR data
+                    ocr_path = storage_path / "ocr_data.json"
+                    if ocr_path.exists():
+                        logger.debug(f"Loading OCR data from: {ocr_path}")
+                        try:
+                            with open(ocr_path, 'r', encoding='utf-8') as f:
+                                response_doc['ocr_data'] = json.load(f)
+                            logger.debug(f"OCR data loaded successfully")
+                        except Exception as e:
+                            logger.error(f"Error loading OCR data: {e}")
+                            response_doc['ocr_data_error'] = str(e)
+                    else:
+                        logger.warning(f"OCR data file not found: {ocr_path}")
+                        response_doc['ocr_data_error'] = "OCR data file not found"
+                
+                if include_raw_text:
+                    # Load raw text
+                    raw_text_path = storage_path / "raw_text.txt"
+                    if raw_text_path.exists():
+                        logger.debug(f"Loading raw text from: {raw_text_path}")
+                        try:
+                            with open(raw_text_path, 'r', encoding='utf-8') as f:
+                                response_doc['raw_text'] = f.read()
+                            logger.debug(f"Raw text loaded successfully")
+                        except Exception as e:
+                            logger.error(f"Error loading raw text: {e}")
+                            response_doc['raw_text_error'] = str(e)
+                    else:
+                        logger.warning(f"Raw text file not found: {raw_text_path}")
+                        response_doc['raw_text_error'] = "Raw text file not found"
+                
+                # Check for AI analysis
+                if document.get('has_ai_analysis'):
+                    analysis_path = storage_path / "analysis.txt"
+                    if analysis_path.exists():
+                        logger.debug(f"Loading AI analysis from: {analysis_path}")
+                        try:
+                            with open(analysis_path, 'r', encoding='utf-8') as f:
+                                response_doc['ai_analysis'] = f.read()
+                            logger.debug(f"AI analysis loaded successfully")
+                        except Exception as e:
+                            logger.error(f"Error loading AI analysis: {e}")
+                            response_doc['ai_analysis_error'] = str(e)
+            
+            return jsonify(response_doc)
             
         except Exception as e:
             logger.error(f"Error getting document {document_id}: {str(e)}")
