@@ -1,9 +1,8 @@
+# app.py
 from flask import Flask
 from flask_cors import CORS
 import os
 from pathlib import Path
-import asyncio
-
 
 from config.settings import config
 from utils.logger import setup_logger
@@ -27,21 +26,19 @@ def create_app(config_name='default'):
     # Initialize CORS
     CORS(app)
 
-    # Connect to database right away
-    asyncio.run(db.connect_db())
+    # Connect to database synchronously
+    db.connect_db()
     
     # Ensure required directories exist
     Path(app.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
     
     # Initialize core components
     ocr_engine = OCREngineFactory.create(app_config.OCR_ENGINE, app_config)
-
-    # ocr_processor = OCRProcessor(app_config)
     document_analyzer = DocumentAnalyzer(app_config)
 
     @app.teardown_appcontext
     def close_db_connection(exception):
-        asyncio.run(db.close_db())
+        db.close_db()
 
     # Register blueprints
     api_bp = init_api(ocr_engine, document_analyzer, app_config)
@@ -49,7 +46,7 @@ def create_app(config_name='default'):
     
     # Register case management routes with the /api prefix
     case_bp = init_case_api(db.db, ocr_engine, document_analyzer, app_config)
-    app.register_blueprint(case_bp, url_prefix='/api')  # Add /api prefix here
+    app.register_blueprint(case_bp, url_prefix='/api')
 
     @app.route('/')
     def index():

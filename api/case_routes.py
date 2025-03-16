@@ -1,3 +1,4 @@
+# case_routes.py
 from flask import Blueprint, request, jsonify
 import logging
 import traceback
@@ -19,7 +20,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
     """Initialize case management API routes"""
     
     @case_bp.route('/', methods=['GET'])
-    async def get_cases():
+    def get_cases():
         """Get list of cases with optional filtering"""
         logger.info("GET /cases/ - Retrieving cases list")
         try:
@@ -37,12 +38,16 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
                 
             logger.debug(f"MongoDB query: {query}")
                 
-            # Execute query
+            # Execute query using synchronous PyMongo
+            # Changed from:
+            # cursor = await db.cases.find(query).sort('create_time', -1).skip(skip).limit(limit)
+            # cases = await cursor.to_list(length=limit)
+            # To:
             cursor = db.cases.find(query).sort('create_time', -1).skip(skip).limit(limit)
-            cases = await cursor.to_list(length=limit)
+            cases = list(cursor)  # Convert cursor to list
             
             # Count total
-            total = await db.cases.count_documents(query)
+            total = db.cases.count_documents(query)
             
             logger.info(f"Found {total} cases, returning {len(cases)} results")
             
@@ -66,7 +71,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
             return jsonify({'error': str(e)}), 500
     
     @case_bp.route('/', methods=['POST'])
-    async def create_case():
+    def create_case():
         """Create a new case"""
         logger.info("POST /cases/ - Creating new case")
         try:
@@ -82,13 +87,15 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
                 prefix = "JD" + datetime.now().strftime("%Y%m")
                 logger.debug(f"Generating case number with prefix: {prefix}")
                 
-                counter = await db.counters.find_one_and_update(
+                counter = db.counters.find_one_and_update(
                     {'_id': 'case_number'},
                     {'$inc': {'seq': 1}},
                     upsert=True,
                     return_document=True
                 )
-                data['case_number'] = f"{prefix}{counter['seq']:03d}"
+                
+                seq_num = counter['seq'] if counter and 'seq' in counter else 1
+                data['case_number'] = f"{prefix}{seq_num:03d}"
                 logger.debug(f"Generated case number: {data['case_number']}")
             
             # Set timestamps
@@ -101,11 +108,11 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
                 data['documents'] = []
                 
             # Insert into database
-            result = await db.cases.insert_one(data)
+            result = db.cases.insert_one(data)
             logger.info(f"Case created with ID: {result.inserted_id}")
             
             # Return created case
-            case = await db.cases.find_one({'_id': result.inserted_id})
+            case = db.cases.find_one({'_id': result.inserted_id})
             case['id'] = str(case.pop('_id'))
             
             return jsonify(case), 201
@@ -116,7 +123,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
             return jsonify({'error': str(e)}), 500
     
     @case_bp.route('/<case_id>', methods=['GET'])
-    async def get_case(case_id):
+    def get_case(case_id):
         """Get a single case by ID"""
         logger.info(f"GET /cases/{case_id} - Retrieving case")
         try:
@@ -127,7 +134,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
                 logger.warning(f"Invalid case ID format: {case_id}")
                 return jsonify({'error': 'Invalid case ID format'}), 400
                 
-            case = await db.cases.find_one({'_id': obj_id})
+            case = db.cases.find_one({'_id': obj_id})
             if not case:
                 logger.warning(f"Case not found: {case_id}")
                 return jsonify({'error': 'Case not found'}), 404
@@ -142,7 +149,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
             return jsonify({'error': str(e)}), 500
     
     @case_bp.route('/<case_id>', methods=['PUT'])
-    async def update_case(case_id):
+    def update_case(case_id):
         """Update a case"""
         logger.info(f"PUT /cases/{case_id} - Updating case")
         try:
@@ -167,7 +174,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
             data.pop('create_time', None)
             data.pop('case_number', None)  # Don't update case number
             
-            result = await db.cases.update_one(
+            result = db.cases.update_one(
                 {'_id': obj_id},
                 {'$set': data}
             )
@@ -179,7 +186,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
             logger.info(f"Case updated: {case_id}, modified count: {result.modified_count}")
                 
             # Return updated case
-            case = await db.cases.find_one({'_id': obj_id})
+            case = db.cases.find_one({'_id': obj_id})
             case['id'] = str(case.pop('_id'))
             
             return jsonify(case)
@@ -190,7 +197,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
             return jsonify({'error': str(e)}), 500
     
     @case_bp.route('/<case_id>/documents', methods=['POST'])
-    async def upload_document(case_id):
+    def upload_document(case_id):
         """Upload document to a case and process with OCR"""
         logger.info(f"POST /cases/{case_id}/documents - Uploading document")
         try:
@@ -202,7 +209,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
                 return jsonify({'error': 'Invalid case ID format'}), 400
                 
             # Check if case exists
-            case = await db.cases.find_one({'_id': obj_id})
+            case = db.cases.find_one({'_id': obj_id})
             if not case:
                 logger.warning(f"Case not found: {case_id}")
                 return jsonify({'error': 'Case not found'}), 404
@@ -276,7 +283,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
             
             # Add document to case
             logger.debug(f"Adding document to case: {case_id}")
-            update_result = await db.cases.update_one(
+            update_result = db.cases.update_one(
                 {'_id': obj_id},
                 {
                     '$push': {'documents': document},
@@ -297,7 +304,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
             return jsonify({'error': str(e)}), 500
     
     @case_bp.route('/<case_id>/documents/<document_id>', methods=['GET'])
-    async def get_document(case_id, document_id):
+    def get_document(case_id, document_id):
         """Get document details"""
         logger.info(f"GET /cases/{case_id}/documents/{document_id} - Retrieving document")
         try:
@@ -308,7 +315,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
                 logger.warning(f"Invalid case ID format: {case_id}")
                 return jsonify({'error': 'Invalid case ID format'}), 400
                 
-            case = await db.cases.find_one({
+            case = db.cases.find_one({
                 '_id': obj_id,
                 'documents.id': document_id
             })
@@ -327,7 +334,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
             return jsonify({'error': str(e)}), 500
     
     @case_bp.route('/<case_id>/documents/<document_id>', methods=['PUT'])
-    async def update_document(case_id, document_id):
+    def update_document(case_id, document_id):
         """Update document metadata or processed text"""
         logger.info(f"PUT /cases/{case_id}/documents/{document_id} - Updating document")
         try:
@@ -355,7 +362,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
                 
             update_data['update_time'] = datetime.now()
             
-            result = await db.cases.update_one(
+            result = db.cases.update_one(
                 {
                     '_id': obj_id,
                     'documents.id': document_id
@@ -370,7 +377,7 @@ def init_case_api(db, ocr_processor, document_analyzer, config):
             logger.info(f"Document updated: {document_id}, modified count: {result.modified_count}")
                 
             # Get updated document
-            case = await db.cases.find_one({
+            case = db.cases.find_one({
                 '_id': obj_id,
                 'documents.id': document_id
             })
