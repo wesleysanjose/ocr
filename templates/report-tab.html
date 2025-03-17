@@ -1,0 +1,142 @@
+<!-- templates/report-tab.html -->
+<!-- Report Tab Content -->
+<div class="h-full grid grid-cols-1 gap-4">
+  <div class="bg-white rounded-lg shadow p-4 flex flex-col">
+    <div class="flex justify-between mb-4">
+      <h3 class="text-lg font-semibold">鉴定报告编辑</h3>
+
+      <div class="flex space-x-2">
+        <select id="report-template" class="border rounded px-2 py-1 text-sm">
+          <option value="traffic">交通事故鉴定报告</option>
+          <option value="work">工伤认定报告</option>
+          <option value="medical">医疗事故鉴定报告</option>
+          <option value="injury">伤残等级评定报告</option>
+        </select>
+        <button
+          id="load-template"
+          class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+        >
+          加载模板
+        </button>
+      </div>
+    </div>
+
+    <!-- Report Editor -->
+    <div class="flex-grow border rounded overflow-hidden flex flex-col">
+      <div class="bg-gray-50 border-b p-2 flex items-center space-x-2">
+        <button
+          class="px-2 py-1 border rounded bg-white hover:bg-gray-50 text-sm font-medium"
+        >
+          标题
+        </button>
+        <button
+          class="px-2 py-1 border rounded bg-white hover:bg-gray-50 text-sm"
+        >
+          内容
+        </button>
+        <button
+          class="px-2 py-1 border rounded bg-white hover:bg-gray-50 text-sm"
+        >
+          表格
+        </button>
+        <button
+          class="px-2 py-1 border rounded bg-white hover:bg-gray-50 text-sm"
+        >
+          插入字段
+        </button>
+        <div class="ml-auto flex items-center space-x-2">
+          <button
+            class="px-2 py-1 border rounded bg-white hover:bg-gray-50 text-sm"
+          >
+            预览
+          </button>
+          <button
+            class="px-2 py-1 border rounded bg-white hover:bg-gray-50 text-sm"
+          >
+            保存草稿
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-grow p-8 overflow-auto">
+        <div class="mx-auto max-w-3xl bg-white">
+          <div class="text-center mb-6">
+            <h2 class="text-xl font-bold">交通事故伤残鉴定报告</h2>
+            <p class="text-gray-500 text-sm mt-1">报告编号: JD20250301</p>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Basic Info Section -->
+            <div class="border-b pb-2">
+              <h3 class="font-medium mb-2">基本信息</h3>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="flex">
+                  <span class="font-medium w-20">姓名:</span>
+                  <span class="field-placeholder" data-field="name">张三</span>
+                </div>
+                <div class="flex">
+                  <span class="font-medium w-20">性别:</span>
+                  <span class="field-placeholder" data-field="gender">男</span>
+                </div>
+                <div class="flex">
+                  <span class="font-medium w-20">年龄:</span>
+                  <span class="field-placeholder" data-field="age">42岁</span>
+                </div>
+                <div class="flex">
+                  <span class="font-medium w-20">工作单位:</span>
+                  <span class="field-placeholder" data-field="workUnit"
+                    >北京科技有限公司</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Incident Info Section -->
+            <div class="border-b pb-2">
+              <h3 class="font-medium mb-2">事故信息</h3>
+              <div class="space-y-2">
+                <div class="flex">
+                  <span class="font-medium w-24">事故日期:</span>
+                  <span class="field-placeholder" data-field="accidentDate"
+                    >2024年3月10日</span
+                  >
+                </div>
+                <div class="flex">
+                  <span class="font-medium w-24">事故地点:</span>
+                  <span class="field-placeholder" data-field="accidentLocation"
+                    >北京市海淀区中关村大街</span
+                  >
+                </div>
+                <div class="flex align-top">
+                  <span class="font-medium w-24">事故经过:</span>
+                  <span
+                    class="field-placeholder flex-1"
+                    data-field="accidentDetails"
+                    >被鉴定人于2024年3月10日驾驶机动车行驶至北京市海淀区中关村大街时，与一辆小型客车相撞，造成左腿骨折。</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Medical Info Section -->
+            <div class="border-b pb-2">
+              <h3 class="font-medium mb-2">医疗信息</h3>
+              <div class="space-y-2">
+                <div class="flex">
+                  <span class="font-medium w-24">就诊医院:</span>
+                  <span class="field-placeholder" data-field="hospital"
+                    >北京市第三医院</span
+                  >
+                </div>
+                <div class="flex">
+                  <span class="font-medium w-24">诊断结果:</span>
+                  <span class="field-placeholder" data-field="diagnosis"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

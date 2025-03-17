@@ -1,0 +1,339 @@
+/* static/css/document-viewer.css */
+
+/* Document Viewer Base Layout */
+#document-viewer {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  #document-viewer.active {
+    opacity: 1;
+  }
+  
+  /* Tab Content Display and Transitions */
+  .document-tab-content {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    height: 100%;
+  }
+  
+  .document-tab-content.active {
+    display: flex;
+    flex-direction: column;
+    opacity: 1;
+  }
+  
+  /* Tab Navigation Styles */
+  .document-tab {
+    position: relative;
+    cursor: pointer;
+    padding: 0.75rem 1.25rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    color: #4b5563;
+    border-bottom: 2px solid transparent;
+  }
+  
+  .document-tab:hover {
+    color: #2563eb;
+  }
+  
+  .document-tab.active {
+    color: #2563eb;
+    border-bottom-color: #2563eb;
+  }
+  
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+  
+  /* Preview Image Styles */
+  #preview-image {
+    transform-origin: top left;
+    max-width: 100%;
+    transition: transform 0.2s ease;
+  }
+  
+  /* OCR Line Selection Styles */
+  .ocr-line {
+    border-radius: 0.25rem;
+    transition: background-color 0.15s ease;
+    padding: 0.25rem 0.5rem;
+    margin-bottom: 0.125rem;
+    cursor: pointer;
+  }
+  
+  .ocr-line:hover {
+    background-color: #f3f4f6;
+  }
+  
+  .ocr-line.bg-blue-100 {
+    background-color: #dbeafe;
+    border-left: 2px solid #3b82f6;
+  }
+  
+  /* Page Selector Styles */
+  .page-selector {
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border-radius: 0.25rem;
+  }
+  
+  .page-selector.active {
+    background-color: #dbeafe;
+    color: #1e40af;
+    font-weight: 500;
+  }
+  
+  /* Field Category Styles */
+  .field-category-tab {
+    position: relative;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .field-category-tab.active {
+    color: #2563eb;
+    border-bottom: 2px solid #2563eb;
+  }
+  
+  /* Field Badge Styles */
+  .field-badge {
+    font-size: 0.65rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 9999px;
+    margin-right: 0.5rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+  }
+  
+  .field-badge-personal {
+    background-color: #dbeafe;
+    color: #1e40af;
+  }
+  
+  .field-badge-medical {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+  
+  .field-badge-incident {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+  
+  .field-badge-legal {
+    background-color: #e0e7ff;
+    color: #3730a3;
+  }
+  
+  /* Field placeholder styles */
+  .field-placeholder {
+    position: relative;
+    padding-bottom: 1px;
+    border-bottom: 1px dashed #d1d5db;
+    transition: all 0.15s ease;
+    cursor: pointer;
+  }
+  
+  .field-placeholder:hover {
+    background-color: #f9fafb;
+  }
+  
+  .field-placeholder.text-blue-800 {
+    border-bottom-color: #1e40af;
+  }
+  
+  /* Category organization sections */
+  .category-header {
+    transition: background-color 0.15s ease;
+  }
+  
+  .category-header:hover {
+    background-color: #f9fafb;
+  }
+  
+  .category-content {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease;
+  }
+  
+  .category-content:not(.hidden) {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  
+  /* Analysis results styles */
+  #analysis-results {
+    height: calc(100% - 2rem);
+    overflow-y: auto;
+  }
+  
+  #analysis-results h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  #analysis-results h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  #analysis-results ul, #analysis-results ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  #analysis-results li {
+    margin-bottom: 0.25rem;
+  }
+  
+  #analysis-results p {
+    margin-bottom: 0.75rem;
+  }
+  
+  #analysis-results blockquote {
+    border-left: 4px solid #e5e7eb;
+    padding-left: 1rem;
+    margin-left: 0;
+    margin-right: 0;
+    font-style: italic;
+    color: #4b5563;
+  }
+  
+  /* Loading indicators */
+  .loading-spinner {
+    border: 3px solid rgba(209, 213, 219, 0.3);
+    border-radius: 50%;
+    border-top: 3px solid #3b82f6;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Drag and drop styles */
+  [draggable=true] {
+    cursor: grab;
+  }
+  
+  [draggable=true]:active {
+    cursor: grabbing;
+  }
+  
+  .dragging-over {
+    background-color: #f0f9ff;
+    border-color: #3b82f6;
+  }
+  
+  /* Modal Styles */
+  #key-input-modal {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+  }
+  
+  #key-input-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  #key-input-modal .modal-content {
+    transform: translateY(-20px);
+    transition: transform 0.2s ease;
+  }
+  
+  #key-input-modal.active .modal-content {
+    transform: translateY(0);
+  }
+  
+  /* Button Styles */
+  button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .document-tab {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+    }
+    
+    .h-full.grid.grid-cols-2,
+    .h-full.grid.grid-cols-3 {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    #preview-section {
+      height: 60vh;
+    }
+  }
+  
+  /* Empty State Styles */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: #6b7280;
+    text-align: center;
+    height: 100%;
+  }
+  
+  .empty-state svg {
+    width: 3rem;
+    height: 3rem;
+    color: #d1d5db;
+    margin-bottom: 1rem;
+  }
+  
+  /* Transition for Tab Changes */
+  .tab-transition-enter {
+    opacity: 0;
+  }
+  
+  .tab-transition-enter-active {
+    opacity: 1;
+    transition: opacity 0.3s;
+  }
+  
+  .tab-transition-exit {
+    opacity: 1;
+  }
+  
+  .tab-transition-exit-active {
+    opacity: 0;
+    transition: opacity 0.3s;
+  }

@@ -1,0 +1,64 @@
+<!-- templates/ocr-tab.html -->
+<!-- OCR Text Tab Content -->
+<div class="h-full grid grid-cols-1 gap-4">
+  <div class="bg-white rounded-lg shadow p-4 flex flex-col h-full">
+    <h3 class="text-lg font-semibold mb-4">OCR 识别结果</h3>
+
+    <!-- OCR results with pagination selector -->
+    <div class="flex mb-2 border-b pb-2" id="page-selector-container">
+      <button
+        class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm mr-1 page-selector active"
+        data-page="1"
+      >
+        第1页
+      </button>
+      <button
+        class="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded text-sm mr-1 page-selector"
+        data-page="2"
+      >
+        第2页
+      </button>
+      <button
+        class="px-2 py-1 text-gray-600 hover:bg-gray-100 rounded text-sm mr-1 page-selector"
+        data-page="3"
+      >
+        第3页
+      </button>
+    </div>
+
+    <!-- OCR Results Display -->
+    <div
+      id="ocr-results"
+      class="flex-grow p-3 border border-gray-300 rounded mb-4 overflow-auto custom-scrollbar"
+    ></div>
+
+    <!-- Selected Text Display -->
+    <div class="border rounded-lg p-3 bg-gray-50">
+      <h4 class="font-medium text-sm mb-2">选中的文本</h4>
+      <div
+        id="selected-text-display"
+        class="text-sm max-h-24 overflow-y-auto custom-scrollbar"
+      >
+        <div class="p-2 text-gray-500 text-center">未选择任何文本</div>
+      </div>
+    </div>
+
+    <!-- Selection Controls -->
+    <div class="mt-4 flex justify-end">
+      <button
+        id="clear-selection-btn"
+        class="px-3 py-1 mr-2 border border-gray-300 text-gray-600 rounded hover:bg-gray-50"
+        disabled
+      >
+        清除选择
+      </button>
+      <button
+        id="process-btn"
+        class="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+        disabled
+      >
+        添加到信息字段
+      </button>
+    </div>
+  </div>
+</div>

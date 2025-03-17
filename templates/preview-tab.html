@@ -1,0 +1,60 @@
+<!-- templates/preview-tab.html -->
+<!-- Preview Tab Content -->
+<div
+  id="preview-section"
+  class="flex-grow bg-white rounded-lg shadow p-4 overflow-hidden flex flex-col"
+>
+  <div
+    class="relative border rounded-lg p-2 bg-white flex-grow overflow-hidden"
+  >
+    <div class="overflow-auto custom-scrollbar h-full">
+      <div class="relative">
+        <img
+          id="preview-image"
+          class="max-w-full transition-transform duration-200"
+          src=""
+          alt="文档预览"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Zoom and Page Navigation Controls -->
+  <div class="mt-4 flex justify-between">
+    <!-- Zoom controls -->
+    <div class="flex items-center gap-4">
+      <button
+        id="zoom-out"
+        class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+      >
+        <span class="text-lg">−</span>
+      </button>
+      <span id="zoom-level" class="px-3 py-1 bg-gray-100 rounded">100%</span>
+      <button
+        id="zoom-in"
+        class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+      >
+        <span class="text-lg">+</span>
+      </button>
+    </div>
+
+    <!-- Page navigation -->
+    <div class="flex items-center gap-4">
+      <button
+        id="prev-page"
+        class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+      >
+        <span class="text-lg">&lt;</span>
+      </button>
+      <span id="page-info" class="px-3 py-1 bg-gray-100 rounded"
+        >第 1 页，共 1 页</span
+      >
+      <button
+        id="next-page"
+        class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+      >
+        <span class="text-lg">&gt;</span>
+      </button>
+    </div>
+  </div>
+</div>

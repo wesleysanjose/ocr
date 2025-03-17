@@ -1,0 +1,149 @@
+<!-- templates/document-viewer.html -->
+<!-- Document Viewer - Base Structure -->
+<div
+  id="document-viewer"
+  class="fixed inset-0 bg-gray-800 bg-opacity-75 z-50 hidden"
+>
+  <div class="container mx-auto h-full py-6 px-4 flex flex-col">
+    <!-- Header with document title and close button -->
+    <div class="flex justify-between items-center mb-2">
+      <h2 class="text-xl font-bold text-white" id="document-title">文档查看</h2>
+      <button id="close-viewer" class="text-white hover:text-gray-300">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="bg-white rounded-t-lg border-b border-gray-200">
+      <div class="flex overflow-x-auto">
+        <div class="document-tab active" data-tab="preview-tab">文档预览</div>
+        <div class="document-tab" data-tab="ocr-tab">OCR文本</div>
+        <div class="document-tab" data-tab="organize-tab">信息整理</div>
+        <div class="document-tab" data-tab="report-tab">鉴定报告</div>
+        <div class="document-tab" data-tab="analysis-tab">AI分析</div>
+      </div>
+    </div>
+
+    <!-- Tab Content Container -->
+    <div class="bg-white rounded-b-lg flex-grow overflow-hidden flex flex-col">
+      <!-- Individual tab content will be included here -->
+      <div
+        id="preview-tab"
+        class="document-tab-content active h-full flex flex-col p-4"
+      >
+        <!-- Preview tab content goes here -->
+        <!-- Include preview-tab.html -->
+      </div>
+
+      <div id="ocr-tab" class="document-tab-content h-full p-4">
+        <!-- OCR tab content goes here -->
+        <!-- Include ocr-tab.html -->
+      </div>
+
+      <div id="organize-tab" class="document-tab-content h-full p-4">
+        <!-- Organize tab content goes here -->
+        <!-- Include organize-tab.html -->
+      </div>
+
+      <div id="report-tab" class="document-tab-content h-full p-4">
+        <!-- Report tab content goes here -->
+        <!-- Include report-tab.html -->
+      </div>
+
+      <div id="analysis-tab" class="document-tab-content h-full p-4">
+        <!-- Analysis tab content goes here -->
+        <!-- Include analysis-tab.html -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Field editing modal -->
+<div
+  id="key-input-modal"
+  class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50"
+>
+  <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+    <h3 class="text-lg font-semibold mb-4">编辑信息</h3>
+
+    <div class="mb-4">
+      <p class="mb-2">
+        已选择文本:
+        <span id="modal-selected-text" class="font-mono text-sm"></span>
+      </p>
+
+      <div class="mb-3">
+        <label
+          for="key-input"
+          class="block text-sm font-medium text-gray-700 mb-1"
+          >字段名称</label
+        >
+        <input
+          type="text"
+          id="key-input"
+          class="w-full p-2 border border-gray-300 rounded mb-1"
+          placeholder="字段名称"
+        />
+      </div>
+
+      <div class="mb-3">
+        <label
+          for="value-input"
+          class="block text-sm font-medium text-gray-700 mb-1"
+          >字段内容</label
+        >
+        <textarea
+          id="value-input"
+          class="w-full p-2 border border-gray-300 rounded resize-y"
+          rows="4"
+          placeholder="字段内容"
+        ></textarea>
+      </div>
+
+      <div>
+        <label
+          for="category-select"
+          class="block text-sm font-medium text-gray-700 mb-1"
+          >字段分类</label
+        >
+        <select
+          id="category-select"
+          class="w-full p-2 border border-gray-300 rounded"
+        >
+          <option value="personal">个人信息</option>
+          <option value="medical">医疗信息</option>
+          <option value="incident">事故信息</option>
+          <option value="legal">法律信息</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2">
+      <button
+        id="modal-cancel"
+        class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
+      >
+        取消
+      </button>
+      <button
+        id="modal-save"
+        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+      >
+        保存
+      </button>
+    </div>
+  </div>
+</div>

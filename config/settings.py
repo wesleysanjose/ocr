@@ -23,7 +23,7 @@ class Config:
     USE_ANGLE_CLS = True
 
     # API configuration
-    AI_API_BASE_URL = "http://10.0.0.100:5000/v1"
+    AI_API_BASE_URL = "http://10.0.0.100:11434/v1"
     AI_API_KEY = "not-needed"
 
 class DevelopmentConfig(Config):
