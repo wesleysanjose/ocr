@@ -28,27 +28,29 @@ class CaseManagement {
     console.log ('Initializing CaseManagement elements');
 
     // Case list elements
-    this.elements = {
-      caseList: document.getElementById ('case-list'),
-      statusTabs: document.getElementById ('status-tabs'),
-      newCaseBtn: document.getElementById ('new-case-btn'),
-      searchInput: document.getElementById ('search-input'),
-      pagination: document.getElementById ('pagination'),
+    document.addEventListener ('DOMContentLoaded', () => {
+      this.elements = {
+        caseList: document.getElementById ('case-list'),
+        statusTabs: document.getElementById ('status-tabs'),
+        newCaseBtn: document.getElementById ('new-case-btn'),
+        searchInput: document.getElementById ('search-input'),
+        pagination: document.getElementById ('pagination'),
 
-      // Case detail elements
-      caseDetail: document.getElementById ('case-detail'),
-      emptyState: document.getElementById ('empty-state'),
-      caseInfoForm: document.getElementById ('case-info-form'),
-      saveChangesBtn: document.getElementById ('save-changes-btn'),
-      exportReportBtn: document.getElementById ('export-report-btn'),
+        // Case detail elements
+        caseDetail: document.getElementById ('case-detail'),
+        emptyState: document.getElementById ('empty-state'),
+        caseInfoForm: document.getElementById ('case-info-form'),
+        saveChangesBtn: document.getElementById ('save-changes-btn'),
+        exportReportBtn: document.getElementById ('export-report-btn'),
 
-      // Document upload - note we're being more explicit about getting elements
-      uploadForm: document.getElementById ('document-upload-form'),
-      fileInput: document.getElementById ('document-file-input'),
-      documentTypeSelect: document.getElementById ('document-type-select'),
-      uploadBtn: document.getElementById ('upload-document-btn'),
-      documentsList: document.getElementById ('documents-list'),
-    };
+        // Document upload - note we're being more explicit about getting elements
+        uploadForm: document.getElementById ('document-upload-form'),
+        fileInput: document.getElementById ('document-file-input'),
+        documentTypeSelect: document.getElementById ('document-type-select'),
+        uploadBtn: document.getElementById ('upload-document-btn'),
+        documentsList: document.getElementById ('documents-list'),
+      };
+    });
 
     // Log any missing elements
     const missingElements = [];

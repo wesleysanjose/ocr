@@ -1,6 +1,6 @@
 document.addEventListener ('DOMContentLoaded', () => {
-  // Check if CaseManagement exists before trying to use it
-  if (typeof CaseManagement === 'function') {
+  // Ensure we only create one instance
+  if (typeof CaseManagement === 'function' && !window.caseManagement) {
     window.caseManagement = new CaseManagement ();
 
     // Add new case button handler
@@ -12,6 +12,8 @@ document.addEventListener ('DOMContentLoaded', () => {
         }
       });
     }
+  } else if (window.caseManagement) {
+    console.log ('CaseManagement already initialized');
   } else {
     console.error (
       'CaseManagement class not found. Make sure case_management.js is loaded correctly.'
