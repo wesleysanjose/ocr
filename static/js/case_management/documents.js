@@ -351,4 +351,31 @@
     logger.info ('Document debug mode enabled');
     return 'Document debug mode enabled. Check console for detailed logs.';
   };
+
+  /**
+   * Show the document viewer with the specified document
+   * @param {Object} document - The document to display
+   */
+  CaseManagement.prototype.showDocumentViewer = function (document) {
+    logger.debug ('Showing document viewer for document', document);
+
+    if (!window.documentViewer) {
+      logger.error ('Document viewer not initialized');
+      this.showToast ('文档查看器未初始化', 'error');
+      return;
+    }
+
+    // Set the current document
+    window.documentViewer.loadDocument (document);
+
+    // Show the viewer
+    const viewerElement = document.getElementById ('document-viewer');
+    if (viewerElement) {
+      viewerElement.classList.remove ('hidden');
+      viewerElement.classList.add ('active');
+    } else {
+      logger.error ('Document viewer element not found');
+      this.showToast ('无法显示文档查看器', 'error');
+    }
+  };
 }) (window.CaseManagement || (window.CaseManagement = {}));
