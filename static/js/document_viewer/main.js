@@ -298,6 +298,104 @@ class DocumentViewer {
         return response.json();
       });
   }
+
+  /**
+   * Render the current document in the viewer
+   */
+  renderDocument() {
+    console.log('Rendering document:', this.currentDocument);
+    
+    if (!this.currentDocument) {
+      this.showError('No document data available');
+      return;
+    }
+    
+    // Set total pages
+    this.totalPages = this.currentDocument.pages || 1;
+    
+    // Reset to first page
+    this.currentPage = 1;
+    
+    // Update page info
+    this.updatePageInfo();
+    
+    // Load the first page
+    this.loadPage(this.currentPage);
+    
+    // Switch to preview tab
+    this.switchTab('preview-tab');
+  }
+  
+  /**
+   * Update page information display
+   */
+  updatePageInfo() {
+    if (this.elements.pageInfo) {
+      this.elements.pageInfo.textContent = `页面 ${this.currentPage} / ${this.totalPages}`;
+    }
+  }
+  
+  /**
+   * Load a specific page of the document
+   * @param {number} pageNumber - The page number to load
+   */
+  loadPage(pageNumber) {
+    console.log(`Loading page ${pageNumber}`);
+    
+    if (!this.currentDocument || !this.currentDocument.pages) {
+      this.showError('Document data is invalid');
+      return;
+    }
+    
+    if (pageNumber < 1 || pageNumber > this.totalPages) {
+      console.error(`Invalid page number: ${pageNumber}`);
+      return;
+    }
+    
+    // Show loading state
+    this.showLoader(`加载第 ${pageNumber} 页...`);
+    
+    // Get page URL
+    const pageUrl = this.currentDocument.page_urls 
+      ? this.currentDocument.page_urls[pageNumber - 1] 
+      : `${this.currentDocument.base_url}/page-${pageNumber}.png`;
+    
+    // Load the image
+    if (this.elements.previewImage) {
+      const img = new Image();
+      img.onload = () => {
+        this.elements.previewImage.src = pageUrl;
+        this.elements.previewImage.classList.remove('hidden');
+        
+        // Remove loader
+        const loader = document.getElementById('document-loader');
+        if (loader && loader.parentNode) {
+          loader.parentNode.removeChild(loader);
+        }
+      };
+      
+      img.onerror = () => {
+        this.showError(`无法加载第 ${pageNumber} 页`);
+      };
+      
+      img.src = pageUrl;
+    } else {
+      this.showError('Preview image element not found');
+    }
+    
+    // Update current page
+    this.currentPage = pageNumber;
+    this.updatePageInfo();
+    
+    // Update navigation buttons
+    if (this.elements.prevPageBtn) {
+      this.elements.prevPageBtn.disabled = pageNumber <= 1;
+    }
+    
+    if (this.elements.nextPageBtn) {
+      this.elements.nextPageBtn.disabled = pageNumber >= this.totalPages;
+    }
+  }
 }
 
 // Make DocumentViewer available globally
