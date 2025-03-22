@@ -298,3 +298,14 @@
     }
   });
 }) ();
+
+// Add this to ensure the document viewer is properly initialized
+(function(DocumentViewer) {
+  // Initialize the document viewer when the DOM is fully loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    // Create and initialize the document viewer
+    window.documentViewer = new DocumentViewer();
+    
+    console.log('Document viewer initialized');
+  });
+})(DocumentViewer);
