@@ -1,33 +1,38 @@
 /* Custom utility classes extending Tailwind */
 
 .custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: theme('colors.gray.400') theme('colors.gray.100');
+  scrollbar-width: thin;
+  scrollbar-color: theme('colors.gray.400') theme('colors.gray.100');
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
+  width: 8px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: theme('colors.gray.100');
+  background: theme('colors.gray.100');
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: theme('colors.gray.400');
-    border-radius: 4px;
+  background-color: theme('colors.gray.400');
+  border-radius: 4px;
 }
 
-/* Component-specific styles */
-.ocr-line {
-    transition: all 0.2s ease;
+/* Analysis results styling */
+.analysis-result {
+  border-left: 3px solid theme('colors.blue.500');
+  background-color: theme('colors.blue.50');
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-radius: 0.25rem;
 }
 
-.ocr-line:hover {
-    background-color: theme('colors.blue.50');
+/* Zoom controls */
+.zoom-control {
+  transition: all 0.2s ease;
 }
 
-.ocr-line.processed {
-    color: theme('colors.gray.500');
+.zoom-control:hover {
+  background-color: theme('colors.gray.200');
 }
 
