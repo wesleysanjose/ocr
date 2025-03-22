@@ -65,7 +65,8 @@ class MongoDB:
         Returns:
             MongoDB collection
         """
-        if not self.db:
+        # Fix: Don't check for truth value on self.db
+        if self.db is None:
             self.connect()
         return self.db[collection_name]
     
