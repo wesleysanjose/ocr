@@ -134,3 +134,72 @@
     console.log ('Document upload component test complete');
   };
 }) (window.CaseManagement);
+
+
+// Add this function to operations.js which extends the CaseManagement prototype
+
+/**
+ * Sets up direct document upload functionality
+ * This allows documents to be uploaded directly from the case detail view
+ */
+CaseManagement.prototype.setupDirectDocumentUpload = function() {
+  console.log('Setting up direct document upload...');
+  
+  // Check if upload elements exist
+  if (!this.elements.uploadForm || !this.elements.fileInput) {
+    console.warn('Document upload elements not found, skipping setup');
+    return;
+  }
+  
+  // Make sure the upload form has the correct event listener
+  this.elements.uploadForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    this.uploadDocument();
+  });
+  
+  // Add drag and drop support for the upload area if it exists
+  const uploadArea = document.getElementById('document-upload-area');
+  if (uploadArea) {
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      uploadArea.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, false);
+    });
+    
+    // Highlight drop area when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+      uploadArea.addEventListener(eventName, () => {
+        uploadArea.classList.add('border-blue-500', 'bg-blue-50');
+      }, false);
+    });
+    
+    // Remove highlight when item is dragged out or dropped
+    ['dragleave', 'drop'].forEach(eventName => {
+      uploadArea.addEventListener(eventName, () => {
+        uploadArea.classList.remove('border-blue-500', 'bg-blue-50');
+      }, false);
+    });
+    
+    // Handle dropped files
+    uploadArea.addEventListener('drop', (e) => {
+      if (!this.selectedCase) {
+        this.showToast('请先选择案件', 'error');
+        return;
+      }
+      
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      
+      if (files.length > 0) {
+        this.elements.fileInput.files = files;
+        // Trigger file input change event
+        const event = new Event('change', { bubbles: true });
+        this.elements.fileInput.dispatchEvent(event);
+      }
+    }, false);
+  }
+  
+  console.log('Direct document upload setup complete');
+};
