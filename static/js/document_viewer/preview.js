@@ -12,7 +12,8 @@
      */
     DocumentViewer.prototype.viewDocument = async function(caseId, documentId) {
       try {
-        console.log(`Viewing document: case=${caseId}, document=${documentId}`);
+        console.log('DocumentViewer.viewDocument called:', caseId, documentId);
+
   
         // Show loading state
         this.elements.container.classList.remove('hidden');

@@ -253,34 +253,34 @@ class DocumentViewer {
    * @param {string} documentName - Name of the document
    * @param {string} documentPath - Path to the document file
    */
-  openDocument(documentName, documentPath) {
-    console.log(`Opening document: ${documentName} at ${documentPath}`);
-    
+  openDocument (documentName, documentPath) {
+    console.log (`Opening document: ${documentName} at ${documentPath}`);
+
     // Show the document viewer
     if (this.elements.container) {
-      this.elements.container.classList.remove('hidden');
+      this.elements.container.classList.remove ('hidden');
     } else {
-      console.error('Document viewer container element not found');
+      console.error ('Document viewer container element not found');
       return;
     }
-    
+
     // Set document title
     if (this.elements.documentTitle) {
       this.elements.documentTitle.textContent = documentName || '未命名文档';
     }
-    
+
     // Show loading state
-    this.showLoader('正在加载文档...');
-    
+    this.showLoader ('正在加载文档...');
+
     // Load document data
-    this.loadDocumentData(documentPath)
-      .then(documentData => {
+    this.loadDocumentData (documentPath)
+      .then (documentData => {
         this.currentDocument = documentData;
-        this.renderDocument();
+        this.renderDocument ();
       })
-      .catch(error => {
-        console.error('Error loading document:', error);
-        this.showError(`无法加载文档: ${error.message}`);
+      .catch (error => {
+        console.error ('Error loading document:', error);
+        this.showError (`无法加载文档: ${error.message}`);
       });
   }
 
@@ -289,109 +289,166 @@ class DocumentViewer {
    * @param {string} documentPath - Path to the document
    * @returns {Promise} - Promise resolving to document data
    */
-  loadDocumentData(documentPath) {
-    return fetch(`/api/document?path=${encodeURIComponent(documentPath)}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-        }
-        return response.json();
-      });
+  loadDocumentData (documentPath) {
+    return fetch (
+      `/api/document?path=${encodeURIComponent (documentPath)}`
+    ).then (response => {
+      if (!response.ok) {
+        throw new Error (
+          `Server returned ${response.status}: ${response.statusText}`
+        );
+      }
+      return response.json ();
+    });
   }
 
   /**
    * Render the current document in the viewer
    */
-  renderDocument() {
-    console.log('Rendering document:', this.currentDocument);
-    
+  renderDocument () {
+    console.log ('Rendering document:', this.currentDocument);
+
     if (!this.currentDocument) {
-      this.showError('No document data available');
+      this.showError ('No document data available');
       return;
     }
-    
+
     // Set total pages
     this.totalPages = this.currentDocument.pages || 1;
-    
+
     // Reset to first page
     this.currentPage = 1;
-    
+
     // Update page info
-    this.updatePageInfo();
-    
+    this.updatePageInfo ();
+
     // Load the first page
-    this.loadPage(this.currentPage);
-    
+    this.loadPage (this.currentPage);
+
     // Switch to preview tab
-    this.switchTab('preview-tab');
+    this.switchTab ('preview-tab');
   }
-  
+
   /**
    * Update page information display
    */
-  updatePageInfo() {
+  updatePageInfo () {
     if (this.elements.pageInfo) {
       this.elements.pageInfo.textContent = `页面 ${this.currentPage} / ${this.totalPages}`;
     }
   }
-  
+
+  // Add to DocumentViewer class in static/js/document_viewer/main.js
+  openDocument (documentName, documentPath) {
+    // Show the document viewer container
+    if (this.elements.container) {
+      this.elements.container.classList.remove ('hidden');
+    }
+
+    // We need to extract caseId and documentId from available information
+    // For now, we'll use the currently selected case and the document path
+    if (window.caseManagement && window.caseManagement.selectedCase) {
+      const caseId = window.caseManagement.selectedCase.id;
+
+      // Find documentId from documentPath or from documents array
+      let documentId = null;
+
+      // If we can extract documentId from the path
+      if (documentPath) {
+        const pathParts = documentPath.split ('/');
+        // Attempt to find the document ID in the path
+        for (const part of pathParts) {
+          if (
+            part.match (
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+            )
+          ) {
+            documentId = part;
+            break;
+          }
+        }
+      }
+
+      // If we couldn't extract from path, try to find by name
+      if (
+        !documentId &&
+        documentName &&
+        window.caseManagement.selectedCase.documents
+      ) {
+        const doc = window.caseManagement.selectedCase.documents.find (
+          d => d.filename === documentName || d.name === documentName
+        );
+        if (doc) documentId = doc.id;
+      }
+
+      // Call the existing viewDocument method if we have both IDs
+      if (caseId && documentId) {
+        this.viewDocument (caseId, documentId);
+        return;
+      }
+    }
+
+    // Fallback: Show error message
+    this.showError ('无法查看文档：无法确定案件或文档ID');
+  }
+
   /**
    * Load a specific page of the document
    * @param {number} pageNumber - The page number to load
    */
-  loadPage(pageNumber) {
-    console.log(`Loading page ${pageNumber}`);
-    
+  loadPage (pageNumber) {
+    console.log (`Loading page ${pageNumber}`);
+
     if (!this.currentDocument || !this.currentDocument.pages) {
-      this.showError('Document data is invalid');
+      this.showError ('Document data is invalid');
       return;
     }
-    
+
     if (pageNumber < 1 || pageNumber > this.totalPages) {
-      console.error(`Invalid page number: ${pageNumber}`);
+      console.error (`Invalid page number: ${pageNumber}`);
       return;
     }
-    
+
     // Show loading state
-    this.showLoader(`加载第 ${pageNumber} 页...`);
-    
+    this.showLoader (`加载第 ${pageNumber} 页...`);
+
     // Get page URL
-    const pageUrl = this.currentDocument.page_urls 
-      ? this.currentDocument.page_urls[pageNumber - 1] 
+    const pageUrl = this.currentDocument.page_urls
+      ? this.currentDocument.page_urls[pageNumber - 1]
       : `${this.currentDocument.base_url}/page-${pageNumber}.png`;
-    
+
     // Load the image
     if (this.elements.previewImage) {
-      const img = new Image();
+      const img = new Image ();
       img.onload = () => {
         this.elements.previewImage.src = pageUrl;
-        this.elements.previewImage.classList.remove('hidden');
-        
+        this.elements.previewImage.classList.remove ('hidden');
+
         // Remove loader
-        const loader = document.getElementById('document-loader');
+        const loader = document.getElementById ('document-loader');
         if (loader && loader.parentNode) {
-          loader.parentNode.removeChild(loader);
+          loader.parentNode.removeChild (loader);
         }
       };
-      
+
       img.onerror = () => {
-        this.showError(`无法加载第 ${pageNumber} 页`);
+        this.showError (`无法加载第 ${pageNumber} 页`);
       };
-      
+
       img.src = pageUrl;
     } else {
-      this.showError('Preview image element not found');
+      this.showError ('Preview image element not found');
     }
-    
+
     // Update current page
     this.currentPage = pageNumber;
-    this.updatePageInfo();
-    
+    this.updatePageInfo ();
+
     // Update navigation buttons
     if (this.elements.prevPageBtn) {
       this.elements.prevPageBtn.disabled = pageNumber <= 1;
     }
-    
+
     if (this.elements.nextPageBtn) {
       this.elements.nextPageBtn.disabled = pageNumber >= this.totalPages;
     }
