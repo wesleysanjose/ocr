@@ -6,48 +6,90 @@
  */
 (function () {
   /**
-     * Initialize the document viewer when the DOM is loaded
-     */
+   * Initialize the document viewer when the DOM is loaded
+   */
   function initDocumentViewer () {
     console.log ('Initializing document viewer...');
 
-    // Create document viewer instance
-    window.documentViewer = new DocumentViewer ();
+    // Create document viewer instance if it doesn't exist
+    if (!window.documentViewer) {
+      console.log ('Creating new DocumentViewer instance');
+      window.documentViewer = new DocumentViewer ();
 
-    // Bind events for each module
-    if (typeof window.documentViewer.bindPreviewEvents === 'function') {
-      window.documentViewer.bindPreviewEvents ();
-    }
-
-    if (typeof window.documentViewer.bindOcrEvents === 'function') {
-      window.documentViewer.bindOcrEvents ();
-    }
-
-    if (typeof window.documentViewer.bindOrganizeEvents === 'function') {
-      window.documentViewer.bindOrganizeEvents ();
-    }
-
-    if (typeof window.documentViewer.bindReportEvents === 'function') {
-      window.documentViewer.bindReportEvents ();
-    }
-
-    if (typeof window.documentViewer.bindAnalysisEvents === 'function') {
-      window.documentViewer.bindAnalysisEvents ();
-    }
-
-    if (typeof window.documentViewer.bindModalEvents === 'function') {
-      window.documentViewer.bindModalEvents ();
+      // Bind events for each module
+      bindAllViewerEvents ();
+    } else {
+      console.log ('DocumentViewer instance already exists');
     }
 
     // Setup drag and drop for field organization
     setupDragAndDrop ();
 
+    // Setup field placeholders after everything is loaded
+    setupFieldPlaceholders ();
+
     console.log ('Document viewer initialization complete');
   }
 
   /**
-     * Setup drag and drop functionality for field organization
-     */
+   * Bind all events for the document viewer
+   */
+  function bindAllViewerEvents () {
+    if (!window.documentViewer) {
+      console.error ('DocumentViewer not found, cannot bind events');
+      return;
+    }
+
+    console.log ('Binding all document viewer events');
+
+    // Preview tab
+    if (typeof window.documentViewer.bindPreviewEvents === 'function') {
+      window.documentViewer.bindPreviewEvents ();
+    } else {
+      console.warn ('bindPreviewEvents function not found');
+    }
+
+    // OCR tab
+    if (typeof window.documentViewer.bindOcrEvents === 'function') {
+      window.documentViewer.bindOcrEvents ();
+    } else {
+      console.warn ('bindOcrEvents function not found');
+    }
+
+    // Organize tab
+    if (typeof window.documentViewer.bindOrganizeEvents === 'function') {
+      window.documentViewer.bindOrganizeEvents ();
+    } else {
+      console.warn ('bindOrganizeEvents function not found');
+    }
+
+    // Report tab
+    if (typeof window.documentViewer.bindReportEvents === 'function') {
+      window.documentViewer.bindReportEvents ();
+    } else {
+      console.warn ('bindReportEvents function not found');
+    }
+
+    // Analysis tab
+    if (typeof window.documentViewer.bindAnalysisEvents === 'function') {
+      window.documentViewer.bindAnalysisEvents ();
+    } else {
+      console.warn ('bindAnalysisEvents function not found');
+    }
+
+    // Modal events
+    if (typeof window.documentViewer.bindModalEvents === 'function') {
+      window.documentViewer.bindModalEvents ();
+    } else {
+      console.warn ('bindModalEvents function not found');
+    }
+
+    console.log ('All document viewer events bound');
+  }
+
+  /**
+   * Setup drag and drop functionality for field organization
+   */
   function setupDragAndDrop () {
     console.log ('Setting up drag and drop functionality...');
 
@@ -101,8 +143,8 @@
   }
 
   /**
-     * Make field placeholders in the report editable
-     */
+   * Make field placeholders in the report editable
+   */
   function setupFieldPlaceholders () {
     console.log ('Setting up field placeholders...');
 
@@ -138,10 +180,10 @@
   }
 
   /**
-     * Update a field in the keyValueMap
-     * @param {string} fieldName - The field name
-     * @param {string} newValue - The new value
-     */
+   * Update a field in the keyValueMap
+   * @param {string} fieldName - The field name
+   * @param {string} newValue - The new value
+   */
   function updateFieldInKeyValueMap (fieldName, newValue) {
     if (!window.documentViewer || !window.documentViewer.keyValueMap) return;
 
@@ -203,10 +245,10 @@
   }
 
   /**
-     * Guess the category for a field
-     * @param {string} fieldName - The field name
-     * @returns {string} - The guessed category
-     */
+   * Guess the category for a field
+   * @param {string} fieldName - The field name
+   * @returns {string} - The guessed category
+   */
   function guessFieldCategory (fieldName) {
     const personalFields = ['name', 'gender', 'age', 'workUnit'];
     const medicalFields = ['hospital', 'diagnosis', 'hospitalDays'];
@@ -231,9 +273,28 @@
     return 'personal'; // Default
   }
 
-  // Initialize on DOM content loaded
-  document.addEventListener ('DOMContentLoaded', () => {
+  // Check if document viewer exists on load
+  if (document.readyState === 'loading') {
+    document.addEventListener ('DOMContentLoaded', initDocumentViewer);
+  } else {
+    // DOM already loaded, initialize now
     initDocumentViewer ();
-    setupFieldPlaceholders ();
+  }
+
+  // Also bind when the document is loaded - this ensures we catch late-loaded viewer
+  window.addEventListener ('load', () => {
+    if (
+      window.documentViewer &&
+      typeof window.documentViewer.debugElements === 'function'
+    ) {
+      window.documentViewer.debugElements ();
+    }
+
+    if (!window.documentViewer) {
+      console.log (
+        'DocumentViewer not found on window load, trying to initialize'
+      );
+      initDocumentViewer ();
+    }
   });
 }) ();

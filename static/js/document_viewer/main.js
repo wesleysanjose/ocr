@@ -37,8 +37,8 @@ class DocumentViewer {
   }
 
   /**
-     * Initialize references to DOM elements
-     */
+   * Initialize references to DOM elements
+   */
   initElements () {
     console.log ('Initializing document viewer elements');
     this.elements = {
@@ -116,8 +116,8 @@ class DocumentViewer {
   }
 
   /**
-     * Bind event handlers to DOM elements
-     */
+   * Bind event handlers to DOM elements
+   */
   bindEvents () {
     console.log ('Binding document viewer events');
 
@@ -126,85 +126,126 @@ class DocumentViewer {
       this.elements.closeViewerBtn.addEventListener ('click', () => {
         this.elements.container.classList.add ('hidden');
       });
+    } else {
+      console.error ('Close viewer button not found');
     }
 
     // Tab navigation
-    this.elements.tabButtons.forEach (tab => {
-      tab.addEventListener ('click', () => {
-        const tabId = tab.dataset.tab;
-        this.switchTab (tabId);
+    if (this.elements.tabButtons && this.elements.tabButtons.length > 0) {
+      this.elements.tabButtons.forEach (tab => {
+        tab.addEventListener ('click', () => {
+          const tabId = tab.dataset.tab;
+          this.switchTab (tabId);
+        });
       });
-    });
+    } else {
+      console.error ('Tab buttons not found');
+    }
 
     // All other binding will be done in their respective modules
   }
 
   /**
-     * Show a loading indicator
-     * @param {string} message - Loading message to display
-     */
+   * Show a loading indicator
+   * @param {string} message - Loading message to display
+   */
   showLoader (message = '加载中...') {
+    if (!this.elements.previewSection) {
+      console.error ('Preview section not found, cannot show loader');
+      return;
+    }
+
     const loaderDiv = document.createElement ('div');
     loaderDiv.className = 'p-4 text-center text-gray-600';
     loaderDiv.id = 'document-loader';
     loaderDiv.innerHTML = `
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-blue-500 mb-2"></div>
-        <p>${message}</p>
-      `;
+      <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-200 border-t-blue-500 mb-2"></div>
+      <p>${message}</p>
+    `;
 
-    if (this.elements.previewSection) {
-      this.elements.previewSection.innerHTML = '';
-      this.elements.previewSection.appendChild (loaderDiv);
-    }
+    this.elements.previewSection.innerHTML = '';
+    this.elements.previewSection.appendChild (loaderDiv);
   }
 
   /**
-     * Display an error message
-     * @param {string} message - Error message to display
-     */
+   * Display an error message
+   * @param {string} message - Error message to display
+   */
   showError (message) {
+    console.error ('Document viewer error:', message);
+
+    if (!this.elements.previewSection) {
+      console.error ('Preview section not found, cannot show error');
+      return;
+    }
+
     const errorDiv = document.createElement ('div');
     errorDiv.className = 'p-4 text-center text-red-600';
     errorDiv.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <p>${message}</p>
-      `;
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <p>${message}</p>
+    `;
 
-    if (this.elements.previewSection) {
-      this.elements.previewSection.innerHTML = '';
-      this.elements.previewSection.appendChild (errorDiv);
-    }
+    this.elements.previewSection.innerHTML = '';
+    this.elements.previewSection.appendChild (errorDiv);
   }
 
   /**
-     * Switch to a different tab
-     * @param {string} tabId - The ID of the tab to switch to
-     */
+   * Switch to a different tab
+   * @param {string} tabId - The ID of the tab to switch to
+   */
   switchTab (tabId) {
+    if (!tabId) {
+      console.error ('Tab ID is undefined');
+      return;
+    }
+
+    console.log (`Switching to tab: ${tabId}`);
+
     // Update active tab state
     this.activeTab = tabId;
 
     // Update tab buttons
-    this.elements.tabButtons.forEach (tab => {
-      if (tab.dataset.tab === tabId) {
-        tab.classList.add ('active');
-      } else {
-        tab.classList.remove ('active');
-      }
-    });
+    if (this.elements.tabButtons) {
+      this.elements.tabButtons.forEach (tab => {
+        if (tab.dataset.tab === tabId) {
+          tab.classList.add ('active');
+        } else {
+          tab.classList.remove ('active');
+        }
+      });
+    }
 
     // Update tab contents
-    this.elements.tabContents.forEach (content => {
-      if (content.id === tabId) {
-        content.classList.add ('active');
-      } else {
-        content.classList.remove ('active');
-      }
-    });
+    if (this.elements.tabContents) {
+      this.elements.tabContents.forEach (content => {
+        if (content.id === tabId) {
+          content.classList.add ('active');
+        } else {
+          content.classList.remove ('active');
+        }
+      });
+    }
 
-    // Special handling for tabs - implemented in other modules
+    // Special handling for tabs when switching - for example, updating OCR display
+    if (
+      tabId === 'ocr-tab' &&
+      typeof this.updateSelectedTextDisplay === 'function'
+    ) {
+      this.updateSelectedTextDisplay ();
+    }
+  }
+
+  /**
+   * Helper method to debug elements in the viewer
+   */
+  debugElements () {
+    console.log ('Document Viewer Elements:');
+    for (const [key, value] of Object.entries (this.elements)) {
+      console.log (`- ${key}: ${value ? 'Found' : 'Missing'}`);
+    }
   }
 }
 

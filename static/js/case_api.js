@@ -131,17 +131,28 @@ class CaseAPI {
     }
   }
 
-  async getDocument (caseId, documentId) {
+  async getDocument (caseId, documentId, includeOcr = true) {
     try {
-      const response = await fetch (
-        `${this.baseUrl}/${caseId}/documents/${documentId}`
-      );
+      // Add query parameters to include OCR data and raw text
+      const queryParams = new URLSearchParams ();
+      if (includeOcr) {
+        queryParams.append ('include_ocr', 'true');
+        queryParams.append ('include_raw_text', 'true');
+      }
+
+      const url = `${this.baseUrl}/${caseId}/documents/${documentId}?${queryParams}`;
+      console.log (`Fetching document: ${url}`);
+
+      const response = await fetch (url);
 
       if (!response.ok) {
+        console.error (`API error: ${response.status}`);
         throw new Error (`API error: ${response.status}`);
       }
 
-      return await response.json ();
+      const data = await response.json ();
+      console.log (`Document data received:`, data);
+      return data;
     } catch (error) {
       console.error (`Error fetching document ${documentId}:`, error);
       throw error;

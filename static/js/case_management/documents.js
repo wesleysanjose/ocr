@@ -6,22 +6,48 @@
  */
 (function (CaseManagement) {
   /**
-     * View a document
-     * @param {string} documentId - The ID of the document to view
-     */
+   * View a document
+   * @param {string} documentId - The ID of the document to view
+   */
   CaseManagement.prototype.viewDocument = function (documentId) {
-    if (!this.selectedCase) return;
+    if (!this.selectedCase) {
+      console.error ('No case selected for document view');
+      this.showToast ('请先选择案件', 'error');
+      return;
+    }
 
-    if (window.documentViewer) {
-      window.documentViewer.viewDocument (this.selectedCase.id, documentId);
-    } else {
+    console.log (
+      `Attempting to view document: ${documentId} from case: ${this.selectedCase.id}`
+    );
+
+    // Ensure document viewer is initialized
+    if (!window.documentViewer) {
       console.error ('Document viewer not available');
+      this.showToast ('文档查看器未初始化', 'error');
+
+      // Try to initialize document viewer
+      if (typeof DocumentViewer === 'function') {
+        console.log ('Attempting to initialize document viewer');
+        window.documentViewer = new DocumentViewer ();
+      } else {
+        console.error ('DocumentViewer class not found');
+        this.showToast ('文档查看器加载失败', 'error');
+        return;
+      }
+    }
+
+    // Now try to view the document
+    try {
+      window.documentViewer.viewDocument (this.selectedCase.id, documentId);
+    } catch (error) {
+      console.error ('Error opening document viewer:', error);
+      this.showToast ('打开文档失败: ' + error.message, 'error');
     }
   };
 
   /**
-     * Upload a document to the current case
-     */
+   * Upload a document to the current case
+   */
   CaseManagement.prototype.uploadDocument = function () {
     if (!this.selectedCase) {
       console.error ('No case selected for document upload');
@@ -55,10 +81,10 @@
   };
 
   /**
-     * Perform the actual document upload
-     * @param {File} file - The file to upload
-     * @param {string} documentType - The document type
-     */
+   * Perform the actual document upload
+   * @param {File} file - The file to upload
+   * @param {string} documentType - The document type
+   */
   CaseManagement.prototype.performDocumentUpload = async function (
     file,
     documentType
@@ -117,8 +143,8 @@
   };
 
   /**
-     * Setup direct document upload functionality
-     */
+   * Setup direct document upload functionality
+   */
   CaseManagement.prototype.setupDirectDocumentUpload = function () {
     console.log ('Setting up direct document upload handler');
 
