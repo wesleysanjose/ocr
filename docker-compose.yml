@@ -1,0 +1,39 @@
+# docker-compose.yml
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+      - ./storage:/app/storage
+    environment:
+      - FLASK_ENV=development
+      - MONGO_HOST=mongo
+      - MONGO_PORT=27017
+      - MONGO_DB=forensic_docs
+    depends_on:
+      - mongo
+    networks:
+      - forensic-network
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - forensic-network
+
+networks:
+  forensic-network:
+    driver: bridge
+
+volumes:
+  mongo-data:

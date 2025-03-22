@@ -1,32 +1,35 @@
+// static/js/config.js
+
 const CONFIG = {
-  // UI configuration
-  zoom: {
-    min: 25,
-    max: 300,
-    step: 25,
-    default: 100,
+  // API endpoints
+  api: {
+    cases: '/api/cases',
+    documents: '/api/documents',
+    documentPreview: '/api/documents/{documentId}/preview',
+    reports: '/api/reports',
+    reportAnalyze: '/api/reports/{reportId}/analyze',
+    clients: '/api/clients',
+    files: '/api/files',
   },
 
-  // Upload limits
+  // Document preview settings
+  preview: {
+    zoom: {
+      min: 25,
+      max: 300,
+      step: 25,
+      default: 100,
+    },
+  },
+
+  // Upload settings
   upload: {
     maxSize: 100 * 1024 * 1024, // 100MB
     allowedTypes: ['.jpg', '.jpeg', '.png', '.pdf'],
   },
 
-  // API endpoints
-  api: {
-    aiEndpoint: 'http://10.0.0.100:5000/v1/chat/completions',
-  },
-
-  // AI analysis settings
+  // Analysis settings
   analysis: {
-    maxTokens: 8192,
-    model: 'any-model',
-  },
-
-  // default system messages and user messages
-  defaultChatCompletionMessages: {
-    system: '你是一个有经验的医生',
-    user: `基于报告扫描的内容，请仔细检查确认报告是正确的，没有错误用语，错别字，特别是医学用语和药品名称。报告首先给个整体的结果，是否有错误。`,
+    defaultPrompt: 'Based on the forensic document report, please identify any errors, inconsistencies, or issues in the following categories:\n\n1. Factual accuracy\n2. Medical terminology\n3. Date and time consistency\n4. Patient identification consistency\n5. Logical flow and completeness\n\nProvide specific recommendations for corrections and improvements.',
   },
 };

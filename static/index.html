@@ -1,10 +1,12 @@
+# static/index.html
+
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="医疗报告OCR分析工具" />
-    <title>医疗报告OCR分析工具</title>
+    <meta name="description" content="Forensic Document Analysis System" />
+    <title>Forensic Document Analysis System</title>
 
     <!-- External CSS -->
     <link
@@ -15,250 +17,879 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@tailwindcss/typography@0.5.0/dist/typography.min.css"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/boxicons@2.0.9/css/boxicons.min.css"
+    />
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/main.css" />
   </head>
-  <body class="min-h-screen bg-gray-50 p-4">
-    <!-- Main Grid Layout -->
-    <div class="grid grid-cols-3 gap-4">
-      <!-- Left Column: File Upload & Preview -->
-      <section id="upload-section" class="col-span-1">
-        <!-- File Upload Component -->
-        <div class="bg-white p-4 rounded-lg shadow">
-          <!-- Component Header -->
-          <header class="mb-4">
-            <h2 class="text-lg font-semibold">上传文件</h2>
-          </header>
-
-          <!-- Upload Form -->
-          <form id="upload-form">
-            <!-- Upload Drop Zone -->
+  <body class="min-h-screen bg-gray-50">
+    <!-- Top navigation -->
+    <header class="bg-blue-900 text-white shadow-md">
+      <div
+        class="container mx-auto px-4 py-3 flex justify-between items-center"
+      >
+        <div class="flex items-center">
+          <h1 class="text-xl font-bold">Forensic Document Analysis System</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+          <select
+            id="tenant-selector"
+            class="bg-blue-800 text-white px-3 py-1 rounded"
+          >
+            <option value="">Select Client</option>
+            <!-- Client options will be populated dynamically -->
+          </select>
+          <div class="relative">
+            <button id="user-menu-button" class="flex items-center space-x-2">
+              <span id="username">User</span>
+              <i class="bx bx-user-circle text-2xl"></i>
+            </button>
+            <!-- User dropdown menu (hidden by default) -->
             <div
-              class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center"
+              id="user-menu"
+              class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 hidden"
             >
-              <input
-                type="file"
-                id="file-upload"
-                accept=".jpg,.jpeg,.png,.pdf"
-                class="hidden"
-              />
-              <label
-                for="file-upload"
-                class="cursor-pointer text-blue-500 hover:text-blue-600"
+              <a
+                href="#"
+                class="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                >Profile</a
               >
-                <p>点击或拖拽上传文件</p>
-                <p class="text-sm text-gray-500">支持 PDF 或图片格式</p>
-              </label>
+              <a
+                href="#"
+                class="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                >Settings</a
+              >
+              <div class="border-t border-gray-100"></div>
+              <a
+                href="#"
+                class="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                >Sign out</a
+              >
             </div>
-          </form>
-
-          <!-- Upload Status -->
-          <div id="upload-status" class="mt-4 text-center hidden">
-            <p class="text-blue-500">正在处理文档...</p>
           </div>
+        </div>
+      </div>
+    </header>
 
-          <!-- Preview Section -->
-          <div id="preview-section" class="mt-4 hidden">
-            <!-- Preview Header -->
-            <header class="mb-2">
-              <h3 class="text-lg font-semibold">预览</h3>
-            </header>
+    <!-- Tab navigation -->
+    <nav class="bg-blue-700 text-white">
+      <div class="container mx-auto">
+        <ul class="flex">
+          <li>
+            <button
+              data-tab="document"
+              class="tab-btn active px-6 py-3 hover:bg-blue-800 focus:outline-none"
+            >
+              Document
+            </button>
+          </li>
+          <li>
+            <button
+              data-tab="organize"
+              class="tab-btn px-6 py-3 hover:bg-blue-800 focus:outline-none"
+            >
+              Organize
+            </button>
+          </li>
+          <li>
+            <button
+              data-tab="report"
+              class="tab-btn px-6 py-3 hover:bg-blue-800 focus:outline-none"
+            >
+              Forensic Report
+            </button>
+          </li>
+          <li>
+            <button
+              data-tab="analysis"
+              class="tab-btn px-6 py-3 hover:bg-blue-800 focus:outline-none"
+            >
+              Analysis
+            </button>
+          </li>
+        </ul>
+      </div>
+    </nav>
 
-            <!-- Preview Container -->
-            <div class="relative border rounded-lg p-2 bg-white">
-              <div
-                class="overflow-auto custom-scrollbar"
-                style="max-height: 400px"
-              >
-                <div id="preview-container" class="relative">
-                  <img
-                    id="preview-image"
-                    class="max-w-full transition-transform duration-200"
-                    src=""
-                    alt="文档预览"
+    <!-- Main content -->
+    <main class="container mx-auto px-4 py-6">
+      <!-- Case selection -->
+      <div class="mb-6 bg-white rounded-lg shadow p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <label for="case-selector" class="font-semibold"
+              >Current Case:</label
+            >
+            <select id="case-selector" class="border rounded px-3 py-2 w-64">
+              <option value="">Select a case</option>
+              <!-- Case options will be populated dynamically -->
+            </select>
+          </div>
+          <div class="flex space-x-2">
+            <button
+              id="new-case-btn"
+              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              New Case
+            </button>
+            <button
+              id="case-info-btn"
+              class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
+              disabled
+            >
+              Case Info
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="tab-content">
+        <!-- Document Tab -->
+        <div id="document-tab" class="tab-pane active">
+          <div class="grid grid-cols-12 gap-6">
+            <!-- Document list panel -->
+            <div class="col-span-3 bg-white rounded-lg shadow">
+              <div class="p-4 border-b">
+                <h2 class="text-lg font-semibold">Case Documents</h2>
+                <div class="mt-2 flex">
+                  <input
+                    type="text"
+                    id="document-search"
+                    placeholder="Search documents"
+                    class="border rounded px-3 py-2 w-full text-sm"
                   />
                 </div>
-              </div>
-
-              <!-- Zoom Controls -->
-              <div class="mt-2 flex justify-center gap-4 items-center">
                 <button
-                  id="zoom-out"
-                  class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  id="upload-document-btn"
+                  class="mt-2 bg-blue-600 text-white px-3 py-2 rounded text-sm w-full hover:bg-blue-700"
                 >
-                  <span class="text-lg">−</span>
+                  Upload Document
                 </button>
-                <span id="zoom-level" class="px-3 py-1 bg-gray-100 rounded"
-                  >100%</span
+              </div>
+              <div
+                id="document-list"
+                class="p-2 overflow-y-auto"
+                style="max-height: 500px"
+              >
+                <!-- Document list items will be populated dynamically -->
+                <div
+                  class="document-item p-2 border-b hover:bg-gray-50 cursor-pointer"
                 >
+                  <div class="flex items-start">
+                    <div class="mr-2 mt-1">
+                      <i class="bx bxs-file-pdf text-red-500 text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                      <div class="font-medium text-sm">Medical Report.pdf</div>
+                      <div class="text-xs text-gray-500">
+                        5 pages • Uploaded yesterday
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="document-item p-2 border-b hover:bg-gray-50 cursor-pointer"
+                >
+                  <div class="flex items-start">
+                    <div class="mr-2 mt-1">
+                      <i class="bx bxs-file-jpg text-blue-500 text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                      <div class="font-medium text-sm">X-Ray Scan.jpg</div>
+                      <div class="text-xs text-gray-500">
+                        1 page • Uploaded 3 days ago
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Document preview panel -->
+            <div class="col-span-9 bg-white rounded-lg shadow">
+              <div class="p-4 border-b flex items-center justify-between">
+                <h2 class="text-lg font-semibold">Document Preview</h2>
+                <div class="flex space-x-2">
+                  <div
+                    class="flex items-center space-x-1 bg-gray-100 rounded-md px-2"
+                  >
+                    <button id="zoom-out" class="text-lg font-bold px-1">
+                      −
+                    </button>
+                    <span id="zoom-level" class="text-sm px-2">100%</span>
+                    <button id="zoom-in" class="text-lg font-bold px-1">
+                      +
+                    </button>
+                  </div>
+                  <div
+                    class="page-controls flex items-center space-x-1 bg-gray-100 rounded-md px-2"
+                  >
+                    <button id="prev-page" class="text-lg px-1">←</button>
+                    <span id="page-info" class="text-sm px-2">Page 1 of 5</span>
+                    <button id="next-page" class="text-lg px-1">→</button>
+                  </div>
+                </div>
+              </div>
+              <div
+                id="document-preview"
+                class="p-4 flex justify-center overflow-auto"
+                style="height: 650px"
+              >
+                <!-- Document preview will be displayed here -->
+                <div
+                  class="flex items-center justify-center h-full text-gray-400"
+                >
+                  <div class="text-center">
+                    <i class="bx bx-file-blank text-6xl"></i>
+                    <p class="mt-2">Select a document to preview</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Organize Tab -->
+        <div id="organize-tab" class="tab-pane hidden">
+          <div class="grid grid-cols-12 gap-6">
+            <!-- OCR Text panel -->
+            <div class="col-span-6 bg-white rounded-lg shadow">
+              <div class="p-4 border-b">
+                <h2 class="text-lg font-semibold">OCR Text</h2>
+                <div class="flex items-center mt-2">
+                  <div class="flex-1 text-sm text-gray-500">
+                    Select text to extract fields
+                  </div>
+                  <div class="flex space-x-2">
+                    <button
+                      id="extract-all-btn"
+                      class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                    >
+                      Extract All
+                    </button>
+                    <button
+                      id="clear-selection-btn"
+                      class="bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-300"
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div
+                id="ocr-text-container"
+                class="p-4 overflow-y-auto"
+                style="height: 620px"
+              >
+                <!-- OCR text will be displayed here with selectable paragraphs -->
+                <div class="ocr-paragraph p-2 hover:bg-blue-50 cursor-pointer">
+                  <p>Patient Name: John Doe</p>
+                </div>
+                <div class="ocr-paragraph p-2 hover:bg-blue-50 cursor-pointer">
+                  <p>Date of Birth: 01/15/1975</p>
+                </div>
+                <div class="ocr-paragraph p-2 hover:bg-blue-50 cursor-pointer">
+                  <p>Medical Record #: 12345678</p>
+                </div>
+                <div class="ocr-paragraph p-2 hover:bg-blue-50 cursor-pointer">
+                  <p>Diagnosis: Fractured right radius</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Organized Fields panel -->
+            <div class="col-span-6 bg-white rounded-lg shadow">
+              <div class="p-4 border-b">
+                <h2 class="text-lg font-semibold">Organized Fields</h2>
+                <div class="flex items-center mt-2">
+                  <div class="flex-1 text-sm text-gray-500">
+                    Extracted information fields
+                  </div>
+                  <div class="flex space-x-2">
+                    <button
+                      id="add-field-btn"
+                      class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                    >
+                      Add Field
+                    </button>
+                    <button
+                      id="save-fields-btn"
+                      class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                    >
+                      Save Fields
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div
+                id="fields-container"
+                class="p-4 overflow-y-auto"
+                style="height: 620px"
+              >
+                <!-- Organized fields will be displayed here -->
+                <div class="field-item bg-gray-50 p-3 rounded mb-2">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium">Patient Name</div>
+                    <div class="flex space-x-1">
+                      <button
+                        class="edit-field text-blue-600 hover:text-blue-800"
+                      >
+                        <i class="bx bx-edit"></i>
+                      </button>
+                      <button
+                        class="delete-field text-red-600 hover:text-red-800"
+                      >
+                        <i class="bx bx-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="mt-1 text-gray-700">John Doe</div>
+                </div>
+                <div class="field-item bg-gray-50 p-3 rounded mb-2">
+                  <div class="flex items-center justify-between">
+                    <div class="font-medium">Date of Birth</div>
+                    <div class="flex space-x-1">
+                      <button
+                        class="edit-field text-blue-600 hover:text-blue-800"
+                      >
+                        <i class="bx bx-edit"></i>
+                      </button>
+                      <button
+                        class="delete-field text-red-600 hover:text-red-800"
+                      >
+                        <i class="bx bx-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="mt-1 text-gray-700">01/15/1975</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Forensic Report Tab -->
+        <div id="report-tab" class="tab-pane hidden">
+          <div class="grid grid-cols-12 gap-6">
+            <!-- Report Builder panel -->
+            <div class="col-span-4 bg-white rounded-lg shadow">
+              <div class="p-4 border-b">
+                <h2 class="text-lg font-semibold">Report Builder</h2>
+                <div class="mt-2">
+                  <label
+                    for="report-template"
+                    class="block text-sm font-medium text-gray-700"
+                    >Template</label
+                  >
+                  <select
+                    id="report-template"
+                    class="mt-1 block w-full border rounded px-3 py-2 text-sm"
+                  >
+                    <option value="medical">Medical Examination Report</option>
+                    <option value="forensic">Forensic Analysis Report</option>
+                    <option value="custom">Custom Template</option>
+                  </select>
+                </div>
+              </div>
+              <div class="p-4 border-b">
+                <h3 class="font-medium">Report Fields</h3>
+                <div id="report-fields" class="mt-2 space-y-2">
+                  <!-- Field selection checkboxes -->
+                  <div class="field-checkbox flex items-center">
+                    <input
+                      type="checkbox"
+                      id="field-patient-name"
+                      class="mr-2"
+                      checked
+                    />
+                    <label for="field-patient-name" class="text-sm"
+                      >Patient Name</label
+                    >
+                  </div>
+                  <div class="field-checkbox flex items-center">
+                    <input
+                      type="checkbox"
+                      id="field-dob"
+                      class="mr-2"
+                      checked
+                    />
+                    <label for="field-dob" class="text-sm">Date of Birth</label>
+                  </div>
+                  <div class="field-checkbox flex items-center">
+                    <input
+                      type="checkbox"
+                      id="field-medical-record"
+                      class="mr-2"
+                      checked
+                    />
+                    <label for="field-medical-record" class="text-sm"
+                      >Medical Record #</label
+                    >
+                  </div>
+                  <div class="field-checkbox flex items-center">
+                    <input
+                      type="checkbox"
+                      id="field-diagnosis"
+                      class="mr-2"
+                      checked
+                    />
+                    <label for="field-diagnosis" class="text-sm"
+                      >Diagnosis</label
+                    >
+                  </div>
+                </div>
+              </div>
+              <div class="p-4">
                 <button
-                  id="zoom-in"
-                  class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  id="generate-report-btn"
+                  class="bg-blue-600 text-white px-3 py-2 rounded text-sm w-full hover:bg-blue-700"
                 >
-                  <span class="text-lg">+</span>
+                  Generate Report
+                </button>
+                <button
+                  id="save-report-btn"
+                  class="mt-2 bg-green-600 text-white px-3 py-2 rounded text-sm w-full hover:bg-green-700"
+                >
+                  Save Report
+                </button>
+                <button
+                  id="export-report-btn"
+                  class="mt-2 bg-purple-600 text-white px-3 py-2 rounded text-sm w-full hover:bg-purple-700"
+                >
+                  Export PDF
                 </button>
               </div>
             </div>
 
-            <!-- Page Navigation -->
-            <div
-              id="page-nav"
-              class="mt-2 flex justify-center gap-4 items-center hidden"
-            >
-              <button
-                id="prev-page"
-                class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            <!-- Report Preview panel -->
+            <div class="col-span-8 bg-white rounded-lg shadow">
+              <div class="p-4 border-b flex items-center justify-between">
+                <h2 class="text-lg font-semibold">Report Preview</h2>
+                <div class="flex space-x-2">
+                  <button
+                    id="edit-report-btn"
+                    class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                  >
+                    Edit Report
+                  </button>
+                </div>
+              </div>
+              <div
+                id="report-preview"
+                class="p-4 overflow-y-auto"
+                style="height: 650px"
               >
-                <span class="text-lg">&lt;</span>
-              </button>
-              <span id="page-info" class="px-3 py-1 bg-gray-100 rounded"
-                >第 1 页，共 1 页</span
-              >
-              <button
-                id="next-page"
-                class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-              >
-                <span class="text-lg">&gt;</span>
-              </button>
+                <!-- Report preview will be displayed here -->
+                <div class="prose max-w-none">
+                  <h1>Medical Examination Report</h1>
+                  <p><strong>Case Number:</strong> FD-2023-0042</p>
+                  <p><strong>Date of Examination:</strong> October 15, 2023</p>
+
+                  <h2>Patient Information</h2>
+                  <table class="border-collapse border border-gray-300 w-full">
+                    <tbody>
+                      <tr class="border border-gray-300">
+                        <td
+                          class="border border-gray-300 p-2 bg-gray-50 font-semibold"
+                        >
+                          Patient Name
+                        </td>
+                        <td class="border border-gray-300 p-2">John Doe</td>
+                      </tr>
+                      <tr class="border border-gray-300">
+                        <td
+                          class="border border-gray-300 p-2 bg-gray-50 font-semibold"
+                        >
+                          Date of Birth
+                        </td>
+                        <td class="border border-gray-300 p-2">01/15/1975</td>
+                      </tr>
+                      <tr class="border border-gray-300">
+                        <td
+                          class="border border-gray-300 p-2 bg-gray-50 font-semibold"
+                        >
+                          Medical Record #
+                        </td>
+                        <td class="border border-gray-300 p-2">12345678</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <h2>Examination Findings</h2>
+                  <p>The patient presents with a fractured right radius...</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </section>
 
-      <!-- Middle Column: OCR Results -->
-      <section id="ocr-section" class="col-span-1">
-        <div class="bg-white p-4 rounded-lg shadow">
-          <!-- OCR Results Header -->
-          <header class="mb-4">
-            <h2 class="text-lg font-semibold">原始扫描结果</h2>
-          </header>
+        <!-- Analysis Tab -->
+        <div id="analysis-tab" class="tab-pane hidden">
+          <div class="grid grid-cols-12 gap-6">
+            <!-- Analysis Controls panel -->
+            <div class="col-span-4 bg-white rounded-lg shadow">
+              <div class="p-4 border-b">
+                <h2 class="text-lg font-semibold">Analysis Controls</h2>
+              </div>
+              <div class="p-4">
+                <div class="mb-4">
+                  <label
+                    for="analysis-type"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Analysis Type</label
+                  >
+                  <select
+                    id="analysis-type"
+                    class="block w-full border rounded px-3 py-2"
+                  >
+                    <option value="error-check">Error Detection</option>
+                    <option value="consistency">Consistency Check</option>
+                    <option value="completeness">Completeness Analysis</option>
+                    <option value="terminology">
+                      Medical Terminology Verification
+                    </option>
+                  </select>
+                </div>
 
-          <!-- OCR Results Display -->
-          <div
-            id="ocr-results"
-            class="w-full h-48 p-2 border border-gray-300 rounded mb-2 overflow-auto custom-scrollbar"
-          ></div>
-          <!-- Process Button -->
-          <div class="mb-2">
-            <button
-              id="process-btn"
-              class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-              disabled
-            >
-              处理
-            </button>
-          </div>
-          <!-- Processed Results -->
-          <div class="mb-2">
-            <h3 class="text-md font-semibold mb-2">复核后结果</h3>
-            <div
-              id="kv-display"
-              class="w-full border border-gray-300 rounded p-2 h-96 overflow-auto custom-scrollbar"
-            ></div>
+                <div class="mb-4">
+                  <label
+                    for="analysis-prompt"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >AI Analysis Prompt</label
+                  >
+                  <textarea
+                    id="analysis-prompt"
+                    rows="6"
+                    class="block w-full border rounded px-3 py-2 text-sm resize-y"
+                  >
+Analyze this forensic document for errors, inconsistencies, and medical terminology issues. Provide specific recommendations for corrections.</textarea
+                  >
+                </div>
+
+                <button
+                  id="run-analysis-btn"
+                  class="bg-green-600 text-white px-3 py-2 rounded text-sm w-full hover:bg-green-700"
+                >
+                  Run Analysis
+                </button>
+
+                <button
+                  id="reset-prompt-btn"
+                  class="mt-2 text-blue-600 text-sm hover:text-blue-800"
+                >
+                  Reset to Default Prompt
+                </button>
+              </div>
+
+              <div class="p-4 border-t">
+                <h3 class="font-medium">Analysis Options</h3>
+                <div class="mt-2 space-y-2">
+                  <div class="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="option-highlight"
+                      class="mr-2"
+                      checked
+                    />
+                    <label for="option-highlight" class="text-sm"
+                      >Highlight Issues</label
+                    >
+                  </div>
+                  <div class="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="option-suggestions"
+                      class="mr-2"
+                      checked
+                    />
+                    <label for="option-suggestions" class="text-sm"
+                      >Show Suggestions</label
+                    >
+                  </div>
+                  <div class="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="option-terminology"
+                      class="mr-2"
+                      checked
+                    />
+                    <label for="option-terminology" class="text-sm"
+                      >Check Medical Terminology</label
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Analysis Results panel -->
+            <div class="col-span-8 bg-white rounded-lg shadow">
+              <div class="p-4 border-b flex items-center justify-between">
+                <h2 class="text-lg font-semibold">Analysis Results</h2>
+                <div class="flex space-x-2">
+                  <button
+                    id="export-analysis-btn"
+                    class="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700"
+                  >
+                    Export Analysis
+                  </button>
+                </div>
+              </div>
+              <div
+                id="analysis-results"
+                class="p-4 overflow-y-auto"
+                style="height: 650px"
+              >
+                <!-- Analysis results will be displayed here -->
+                <div class="p-3 bg-blue-50 border-l-4 border-blue-500 mb-4">
+                  <div class="font-medium">Analysis Completed</div>
+                  <div class="text-sm mt-1">
+                    The report was analyzed for errors, inconsistencies, and
+                    terminology issues.
+                  </div>
+                </div>
+
+                <div class="mb-6">
+                  <h3 class="text-lg font-semibold text-gray-800">Summary</h3>
+                  <div class="mt-2 pl-4 border-l-2 border-gray-300">
+                    <p class="mb-2">
+                      The document contains
+                      <span class="font-bold text-red-600"
+                        >3 potential errors</span
+                      >
+                      and
+                      <span class="font-bold text-yellow-600"
+                        >2 inconsistencies</span
+                      >.
+                    </p>
+                    <p>
+                      Overall quality assessment:
+                      <span class="font-medium text-yellow-600"
+                        >Needs minor revisions</span
+                      >
+                    </p>
+                  </div>
+                </div>
+
+                <div class="mb-6">
+                  <h3 class="text-lg font-semibold text-gray-800">
+                    Detailed Findings
+                  </h3>
+
+                  <div class="mt-3 p-3 bg-red-50 rounded">
+                    <div class="font-medium text-red-800">
+                      Error #1: Incorrect Date Format
+                    </div>
+                    <div class="mt-1 text-sm">
+                      <p>
+                        The date of birth appears in MM/DD/YYYY format
+                        (01/15/1975) but elsewhere dates use DD/MM/YYYY format.
+                      </p>
+                      <div class="mt-2">
+                        <span class="font-medium">Suggestion:</span> Standardize
+                        all dates to use DD/MM/YYYY format:
+                        <span class="text-green-700 font-medium"
+                          >15/01/1975</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mt-3 p-3 bg-yellow-50 rounded">
+                    <div class="font-medium text-yellow-800">
+                      Inconsistency #1: Patient Identification
+                    </div>
+                    <div class="mt-1 text-sm">
+                      <p>
+                        Patient is referred to as "John Doe" in the header but
+                        as "J. Doe" in the examination notes.
+                      </p>
+                      <div class="mt-2">
+                        <span class="font-medium">Suggestion:</span> Use
+                        consistent naming throughout the document.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mb-6">
+                  <h3 class="text-lg font-semibold text-gray-800">
+                    Recommendations
+                  </h3>
+                  <ul class="mt-2 list-disc pl-5 space-y-2">
+                    <li>Standardize date formats throughout the document</li>
+                    <li>Ensure consistent patient identification</li>
+                    <li>Add missing medical record number in section 3</li>
+                    <li>
+                      Verify spelling of "radius" (appears as "radus" in one
+                      instance)
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
+    </main>
 
-      <!-- Right Column: AI Analysis -->
-      <section id="analysis-section" class="col-span-1">
-        <div class="bg-white p-4 rounded-lg shadow">
-          <!-- Analysis Header -->
-          <header class="mb-4">
-            <h2 class="text-lg font-semibold">人工智能错误分析</h2>
-          </header>
-          <!-- Prompt Editor -->
-          <div class="mb-4">
-            <label
-              for="analysis-prompt"
-              class="block text-sm font-medium text-gray-700 mb-2"
-            >
-              分析提示词
-            </label>
-            <textarea
-              id="analysis-prompt"
-              class="w-full h-32 p-2 border border-gray-300 rounded mb-2 text-sm resize-y"
-              placeholder="输入分析提示词..."
-            ></textarea>
-            <button
-              id="reset-prompt-btn"
-              class="text-sm text-blue-600 hover:text-blue-800"
-            >
-              重置为默认提示词
-            </button>
-          </div>
-
-          <!-- Analysis Controls -->
-          <div class="mb-2 flex items-center space-x-2">
-            <button
-              id="analyze-btn"
-              class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-              disabled
-            >
-              分析文本
-            </button>
-            <button
-              id="cancel-analyze-btn"
-              class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed hidden"
-            >
-              取消
-            </button>
-          </div>
-
-          <!-- Analysis Results -->
-          <div class="mb-2">
-            <div
-              id="analysis-results"
-              class="w-full h-96 p-4 border border-gray-300 rounded overflow-auto prose prose-sm max-w-none"
-            ></div>
-          </div>
+    <!-- Modals -->
+    <!-- Upload Document Modal -->
+    <div
+      id="upload-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50"
+    >
+      <div class="bg-white rounded-lg shadow-lg w-1/2 max-w-2xl">
+        <div class="p-4 border-b flex justify-between items-center">
+          <h3 class="text-lg font-semibold">Upload Document</h3>
+          <button
+            id="close-upload-modal"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <i class="bx bx-x text-2xl"></i>
+          </button>
         </div>
-      </section>
+        <div class="p-6">
+          <form id="upload-form">
+            <div class="mb-4">
+              <label
+                for="upload-file"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Document</label
+              >
+              <div
+                class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center"
+              >
+                <input
+                  type="file"
+                  id="upload-file"
+                  accept=".jpg,.jpeg,.png,.pdf"
+                  class="hidden"
+                />
+                <label
+                  for="upload-file"
+                  class="cursor-pointer text-blue-500 hover:text-blue-600"
+                >
+                  <p>Click or drag to upload a file</p>
+                  <p class="text-sm text-gray-500">
+                    Supports PDF, JPG, PNG files (max 100MB)
+                  </p>
+                </label>
+                <div
+                  id="selected-file"
+                  class="mt-2 text-sm font-medium hidden"
+                ></div>
+              </div>
+            </div>
+            <div class="mb-4">
+              <label
+                for="document-description"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Description</label
+              >
+              <input
+                type="text"
+                id="document-description"
+                class="w-full border rounded px-3 py-2"
+                placeholder="Enter document description"
+              />
+            </div>
+            <div class="mb-4">
+              <label
+                for="document-tags"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Tags</label
+              >
+              <input
+                type="text"
+                id="document-tags"
+                class="w-full border rounded px-3 py-2"
+                placeholder="Enter tags separated by commas"
+              />
+            </div>
+            <div class="flex justify-end space-x-2">
+              <button
+                type="button"
+                id="cancel-upload"
+                class="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                id="submit-upload"
+                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Upload
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
-    <!-- Modal Component -->
+    <!-- Field Editor Modal -->
     <div
-      id="key-input-modal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center"
+      id="field-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50"
     >
-      <div class="bg-white p-4 rounded-lg shadow-lg">
-        <header class="mb-4">
-          <h3 class="text-lg font-semibold">复核确认</h3>
-        </header>
-
-        <!-- Modal Content -->
-        <div class="mb-4">
-          <p class="mb-2">
-            已选择文本:
-            <span id="modal-selected-text" class="font-mono text-sm"></span>
-          </p>
-          <input
-            type="text"
-            id="key-input"
-            class="w-full p-2 border border-gray-300 rounded mb-4"
-            placeholder="输入抬头"
-          />
-          <textarea
-            id="value-input"
-            class="w-full p-2 border border-gray-300 rounded mb-4 resize-y min-h-32"
-            placeholder="输入内容"
-          ></textarea>
+      <div class="bg-white rounded-lg shadow-lg w-1/2 max-w-xl">
+        <div class="p-4 border-b flex justify-between items-center">
+          <h3 class="text-lg font-semibold">Edit Field</h3>
+          <button
+            id="close-field-modal"
+            class="text-gray-500 hover:text-gray-700"
+          >
+            <i class="bx bx-x text-2xl"></i>
+          </button>
         </div>
-
-        <!-- Modal Actions -->
-        <div class="flex justify-end gap-2">
-          <button
-            id="modal-cancel"
-            class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
-          >
-            取消
-          </button>
-          <button
-            id="modal-save"
-            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            保存
-          </button>
+        <div class="p-6">
+          <form id="field-form">
+            <div class="mb-4">
+              <label
+                for="field-name"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Field Name</label
+              >
+              <input
+                type="text"
+                id="field-name"
+                class="w-full border rounded px-3 py-2"
+                placeholder="Enter field name"
+              />
+            </div>
+            <div class="mb-4">
+              <label
+                for="field-value"
+                class="block text-sm font-medium text-gray-700 mb-1"
+                >Field Value</label
+              >
+              <textarea
+                id="field-value"
+                class="w-full border rounded px-3 py-2 h-32 resize-y"
+                placeholder="Enter field value"
+              ></textarea>
+            </div>
+            <div class="flex justify-end space-x-2">
+              <button
+                type="button"
+                id="cancel-field"
+                class="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                id="save-field"
+                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Save
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -268,10 +899,12 @@
 
     <!-- Application Scripts -->
     <script src="js/config.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/preview.js"></script>
-    <script src="js/ocr.js"></script>
-    <script src="js/analysis.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/document-handler.js"></script>
+    <script src="js/ocr-handler.js"></script>
+    <script src="js/field-handler.js"></script>
+    <script src="js/report-handler.js"></script>
+    <script src="js/analysis-handler.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

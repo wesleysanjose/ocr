@@ -4,3 +4,7 @@ flask_cors==5.0.0
 paddleocr==2.9.1
 pdf2image==1.17.0
 openai==1.61.1
+boto3
+python-dotenv
+Pillow
+PyMongo

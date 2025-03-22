@@ -1,3 +1,5 @@
+# app.py
+
 from flask import Flask
 from flask_cors import CORS
 import os
@@ -5,9 +7,8 @@ from pathlib import Path
 
 from config.settings import config
 from utils.logger import setup_logger
-#from core.ocr import OCRProcessor
-from core.ocr.factory import OCREngineFactory
-from core.analyzer import DocumentAnalyzer
+from core.database import MongoDB
+from core.storage import StorageFactory
 from api.routes import init_api
 
 def create_app(config_name='default'):
@@ -26,15 +27,18 @@ def create_app(config_name='default'):
     
     # Ensure required directories exist
     Path(app.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
+    Path(app.config['STORAGE_ROOT_DIR']).mkdir(parents=True, exist_ok=True)
+    Path(app.config['TEMP_DIR']).mkdir(parents=True, exist_ok=True)
     
-    # Initialize core components
-    ocr_engine = OCREngineFactory.create(app_config.OCR_ENGINE, app_config)
-
-    # ocr_processor = OCRProcessor(app_config)
-    document_analyzer = DocumentAnalyzer(app_config)
-
+    # Initialize database
+    db = MongoDB(app_config)
+    db.connect()
+    
+    # Initialize storage
+    storage = StorageFactory.get_provider(app_config.STORAGE_PROVIDER, app_config)
+    
     # Register blueprints
-    api_bp = init_api(ocr_engine, document_analyzer, app_config)
+    api_bp = init_api(app_config)
     app.register_blueprint(api_bp, url_prefix='/api')
     
     @app.route('/')

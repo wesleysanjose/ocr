@@ -1,31 +1,84 @@
-/* Custom utility classes extending Tailwind */
-.custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: theme('colors.gray.400') theme('colors.gray.100');
+
+/* General styles */
+* {
+  box-sizing: border-box;
 }
 
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.5;
+}
+
+/* Custom scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
+  width: 8px;
+  height: 8px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: theme('colors.gray.100');
+  background: #f1f1f1;
+  border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: theme('colors.gray.400');
-    border-radius: 4px;
+  background: #c1c1c1;
+  border-radius: 4px;
 }
 
-/* Component-specific styles */
-.ocr-line {
-    transition: all 0.2s ease;
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
 }
 
-.ocr-line:hover {
-    background-color: theme('colors.blue.50');
+/* Tab navigation */
+.tab-btn.active {
+  background-color: #1e40af;
+  font-weight: 500;
 }
 
-.ocr-line.processed {
-    color: theme('colors.gray.500');
+/* Document preview */
+#document-preview img {
+  max-width: 100%;
+  transition: transform 0.2s;
+}
+
+/* OCR text paragraphs */
+.ocr-paragraph.selected {
+  background-color: #dbeafe;
+  border-left: 3px solid #3b82f6;
+}
+
+/* Field items */
+.field-item:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Loader animation */
+.loader {
+  border: 3px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 3px solid #3b82f6;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Fade in animation */
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Document item */
+.document-item.active {
+  background-color: #f0f7ff;
+  border-left: 3px solid #3b82f6;
 }
