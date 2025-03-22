@@ -9,6 +9,7 @@ from pathlib import Path
 from werkzeug.utils import secure_filename
 import tempfile
 import os
+from bson import ObjectId
 
 from core.database import MongoDB
 from core.documents.processor import DocumentProcessor
@@ -18,6 +19,45 @@ from utils.helpers import create_upload_dir, allowed_file, cleanup_dir
 
 logger = logging.getLogger(__name__)
 bp = Blueprint('api', __name__)
+
+def process_mongodb_doc(doc):
+    """
+    Process MongoDB document to make it JSON serializable
+    
+    Args:
+        doc: MongoDB document or list of documents
+        
+    Returns:
+        Document with ObjectId converted to string
+    """
+    if doc is None:
+        return None
+        
+    if isinstance(doc, list):
+        return [process_mongodb_doc(item) for item in doc]
+        
+    if isinstance(doc, dict):
+        result = {}
+        for key, value in doc.items():
+            # Convert _id to id
+            if key == '_id':
+                result['id'] = str(value)
+            else:
+                # Process nested documents
+                if isinstance(value, (dict, list)):
+                    result[key] = process_mongodb_doc(value)
+                # Convert ObjectId values
+                elif isinstance(value, ObjectId):
+                    result[key] = str(value)
+                else:
+                    result[key] = value
+        return result
+        
+    # Convert single ObjectId
+    if isinstance(doc, ObjectId):
+        return str(doc)
+        
+    return doc
 
 def init_api(config):
     """Initialize API routes with dependencies"""
@@ -58,6 +98,77 @@ def init_api(config):
             return None
             
         return client
+    
+    # ===== Client/Tenant Endpoints =====
+    
+    @bp.route('/clients', methods=['GET'])
+    def list_clients():
+        """List clients/tenants"""
+        try:
+            # Get query parameters
+            status = request.args.get('status')
+            limit = int(request.args.get('limit', 50))
+            skip = int(request.args.get('skip', 0))
+            
+            # List clients
+            clients = client_model.list(
+                status=status,
+                limit=limit,
+                skip=skip
+            )
+            
+            # Process MongoDB documents
+            processed_clients = process_mongodb_doc(clients)
+            
+            return jsonify({
+                'clients': processed_clients,
+                'count': len(clients),
+                'total': len(clients)  # This should be updated to get actual total count
+            }), 200
+            
+        except Exception as e:
+            logger.error(f"Failed to list clients: {e}", exc_info=True)
+            return jsonify({'error': 'Failed to list clients'}), 500
+    
+    @bp.route('/clients', methods=['POST'])
+    def create_client():
+        """Create a new client/tenant"""
+        try:
+            data = request.json
+            
+            # Create client
+            client_id = client_model.create(
+                name=data.get('name'),
+                contact_email=data.get('contact_email'),
+                contact_name=data.get('contact_name'),
+                contact_phone=data.get('contact_phone'),
+                settings=data.get('settings'),
+                created_by=data.get('created_by')
+            )
+            
+            return jsonify({'id': client_id, 'message': 'Client created successfully'}), 201
+            
+        except Exception as e:
+            logger.error(f"Failed to create client: {e}", exc_info=True)
+            return jsonify({'error': 'Failed to create client'}), 500
+    
+    @bp.route('/clients/<client_id>', methods=['GET'])
+    def get_client(client_id):
+        """Get client/tenant details"""
+        try:
+            # Get client
+            client = client_model.get(client_id)
+            if not client:
+                return jsonify({'error': 'Client not found'}), 404
+            
+            # Process MongoDB document    
+            processed_client = process_mongodb_doc(client)
+                
+            return jsonify(processed_client), 200
+            
+        except Exception as e:
+            logger.error(f"Failed to get client {client_id}: {e}", exc_info=True)
+            return jsonify({'error': 'Failed to get client'}), 500
     
     # ===== Case Endpoints =====
     
@@ -105,8 +216,11 @@ def init_api(config):
             case = case_model.get(case_id, tenant_id)
             if not case:
                 return jsonify({'error': 'Case not found'}), 404
+            
+            # Process MongoDB document
+            processed_case = process_mongodb_doc(case)
                 
-            return jsonify(case), 200
+            return jsonify(processed_case), 200
             
         except Exception as e:
             logger.error(f"Failed to get case {case_id}: {e}", exc_info=True)
@@ -144,8 +258,11 @@ def init_api(config):
                 sort_dir=sort_dir
             )
             
+            # Process MongoDB documents
+            processed_cases = process_mongodb_doc(cases)
+            
             return jsonify({
-                'cases': cases,
+                'cases': processed_cases,
                 'count': len(cases),
                 'total': len(cases)  # This should be updated to get actual total count
             }), 200
@@ -313,8 +430,11 @@ def init_api(config):
             document = document_model.get(document_id, tenant_id)
             if not document:
                 return jsonify({'error': 'Document not found'}), 404
+            
+            # Process MongoDB document
+            processed_document = process_mongodb_doc(document)
                 
-            return jsonify(document), 200
+            return jsonify(processed_document), 200
             
         except Exception as e:
             logger.error(f"Failed to get document {document_id}: {e}", exc_info=True)
@@ -347,8 +467,11 @@ def init_api(config):
                 skip=skip
             )
             
+            # Process MongoDB documents
+            processed_documents = process_mongodb_doc(documents)
+            
             return jsonify({
-                'documents': documents,
+                'documents': processed_documents,
                 'count': len(documents),
                 'total': len(documents)  # This should be updated to get actual total count
             }), 200
@@ -383,7 +506,10 @@ def init_api(config):
                 page=page
             )
             
-            return jsonify(preview), 200
+            # Process any MongoDB objects
+            processed_preview = process_mongodb_doc(preview)
+            
+            return jsonify(processed_preview), 200
             
         except Exception as e:
             logger.error(f"Failed to get document preview {document_id}: {e}", exc_info=True)
@@ -482,8 +608,11 @@ def init_api(config):
             report = report_model.get(report_id, tenant_id)
             if not report:
                 return jsonify({'error': 'Report not found'}), 404
+            
+            # Process MongoDB document
+            processed_report = process_mongodb_doc(report)
                 
-            return jsonify(report), 200
+            return jsonify(processed_report), 200
             
         except Exception as e:
             logger.error(f"Failed to get report {report_id}: {e}", exc_info=True)
@@ -518,8 +647,11 @@ def init_api(config):
                 skip=skip
             )
             
+            # Process MongoDB documents
+            processed_reports = process_mongodb_doc(reports)
+            
             return jsonify({
-                'reports': reports,
+                'reports': processed_reports,
                 'count': len(reports),
                 'total': len(reports)  # This should be updated to get actual total count
             }), 200
@@ -622,74 +754,5 @@ def init_api(config):
             logger.error(f"Failed to analyze report {report_id}: {e}", exc_info=True)
             return jsonify({'error': 'Failed to analyze report'}), 500
     
-    # ===== Client/Tenant Endpoints =====
-    
-    @bp.route('/clients', methods=['POST'])
-    def create_client():
-        """Create a new client/tenant"""
-        try:
-            data = request.json
-            
-            # Create client
-            client_id = client_model.create(
-                name=data.get('name'),
-                contact_email=data.get('contact_email'),
-                contact_name=data.get('contact_name'),
-                contact_phone=data.get('contact_phone'),
-                settings=data.get('settings'),
-                created_by=data.get('created_by')
-            )
-            
-            return jsonify({'id': client_id, 'message': 'Client created successfully'}), 201
-            
-        except Exception as e:
-            logger.error(f"Failed to create client: {e}", exc_info=True)
-            return jsonify({'error': 'Failed to create client'}), 500
-    
-    @bp.route('/clients/<client_id>', methods=['GET'])
-    def get_client(client_id):
-        """Get client/tenant details"""
-        try:
-            # Get client
-            client = client_model.get(client_id)
-            if not client:
-                return jsonify({'error': 'Client not found'}), 404
-                
-            return jsonify(client), 200
-            
-        except Exception as e:
-            logger.error(f"Failed to get client {client_id}: {e}", exc_info=True)
-            return jsonify({'error': 'Failed to get client'}), 500
-    
-    # api/routes.py
-
-from utils.helpers import convert_object_ids
-
-@bp.route('/clients', methods=['GET'])
-def list_clients():
-    """List clients/tenants"""
-    try:
-        # Get query parameters
-        status = request.args.get('status')
-        limit = int(request.args.get('limit', 50))
-        skip = int(request.args.get('skip', 0))
-        
-        # List clients
-        clients = client_model.list(
-            status=status,
-            limit=limit,
-            skip=skip
-        )
-        
-        # Process MongoDB documents
-        processed_clients = process_mongodb_doc(clients)
-        
-        return jsonify({
-            'clients': processed_clients,
-            'count': len(clients),
-            'total': len(clients)  # This should be updated to get actual total count
-        }), 200
-        
-    except Exception as e:
-        logger.error(f"Failed to list clients: {e}", exc_info=True)
-        return jsonify({'error': 'Failed to list clients'}), 500
+    # Return the blueprint
+    return bp
