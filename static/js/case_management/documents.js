@@ -242,6 +242,60 @@ class CaseManagement {
   }
 }
 
+// static/js/case_management/documents.js
+
+/**
+ * Document-related methods for the CaseManagement class
+ * This extends the CaseManagement prototype with document handling methods
+ */
+(function (CaseManagement) {
+  /**
+   * Upload a document to the current case
+   */
+  CaseManagement.prototype.uploadDocument = function () {
+    if (!this.selectedCase) {
+      console.error('No case selected for document upload');
+      this.showToast('请先选择案件', 'error');
+      return;
+    }
+
+    // Rest of the uploadDocument function
+    // ...
+  };
+
+  /**
+   * View a document
+   */
+  CaseManagement.prototype.viewDocument = function (documentId) {
+    // Document viewing logic
+    // ...
+  };
+
+  /**
+   * Load case details including documents
+   */
+  CaseManagement.prototype.loadCaseDetail = function (caseId) {
+    try {
+      console.log(`Loading case detail for ID: ${caseId}`);
+
+      if (!this.elements.caseDetail || !this.elements.emptyState) {
+        console.warn('Case detail elements not found');
+        return;
+      }
+
+      // Rest of the loadCaseDetail function
+      // ...
+    } catch (error) {
+      // Error handling
+      // ...
+    }
+  };
+
+  // Other document-related methods
+  // ...
+
+})(window.CaseManagement || (window.CaseManagement = {}));
+
 // Export the class to make it available to other modules
 window.CaseManagement = CaseManagement;
 

@@ -14,6 +14,9 @@ class CaseManagement {
     this.selectedCase = null;
     this.selectedStatus = '全部';
 
+    // Initialize elements object first - this is the key fix
+    this.elements = {};
+    
     // Initialize components
     this.initElements ();
     this.bindEvents ();
@@ -27,30 +30,28 @@ class CaseManagement {
   initElements () {
     console.log ('Initializing CaseManagement elements');
 
-    // Case list elements
-    document.addEventListener ('DOMContentLoaded', () => {
-      this.elements = {
-        caseList: document.getElementById ('case-list'),
-        statusTabs: document.getElementById ('status-tabs'),
-        newCaseBtn: document.getElementById ('new-case-btn'),
-        searchInput: document.getElementById ('search-input'),
-        pagination: document.getElementById ('pagination'),
+    // Initialize elements directly instead of inside a DOMContentLoaded event
+    this.elements = {
+      caseList: document.getElementById ('case-list'),
+      statusTabs: document.getElementById ('status-tabs'),
+      newCaseBtn: document.getElementById ('new-case-btn'),
+      searchInput: document.getElementById ('search-input'),
+      pagination: document.getElementById ('pagination'),
 
-        // Case detail elements
-        caseDetail: document.getElementById ('case-detail'),
-        emptyState: document.getElementById ('empty-state'),
-        caseInfoForm: document.getElementById ('case-info-form'),
-        saveChangesBtn: document.getElementById ('save-changes-btn'),
-        exportReportBtn: document.getElementById ('export-report-btn'),
+      // Case detail elements
+      caseDetail: document.getElementById ('case-detail'),
+      emptyState: document.getElementById ('empty-state'),
+      caseInfoForm: document.getElementById ('case-info-form'),
+      saveChangesBtn: document.getElementById ('save-changes-btn'),
+      exportReportBtn: document.getElementById ('export-report-btn'),
 
-        // Document upload - note we're being more explicit about getting elements
-        uploadForm: document.getElementById ('document-upload-form'),
-        fileInput: document.getElementById ('document-file-input'),
-        documentTypeSelect: document.getElementById ('document-type-select'),
-        uploadBtn: document.getElementById ('upload-document-btn'),
-        documentsList: document.getElementById ('documents-list'),
-      };
-    });
+      // Document upload - note we're being more explicit about getting elements
+      uploadForm: document.getElementById ('document-upload-form'),
+      fileInput: document.getElementById ('document-file-input'),
+      documentTypeSelect: document.getElementById ('document-type-select'),
+      uploadBtn: document.getElementById ('upload-document-btn'),
+      documentsList: document.getElementById ('documents-list'),
+    };
 
     // Log any missing elements
     const missingElements = [];
@@ -61,7 +62,7 @@ class CaseManagement {
     }
 
     if (missingElements.length > 0) {
-      console.error ('Missing CaseManagement elements:', missingElements);
+      console.warn ('Missing CaseManagement elements:', missingElements);
     }
   }
 
