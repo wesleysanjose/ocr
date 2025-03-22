@@ -145,20 +145,75 @@
 CaseManagement.prototype.setupDirectDocumentUpload = function() {
   console.log('Setting up direct document upload...');
   
-  // Check if upload elements exist
-  if (!this.elements.uploadForm || !this.elements.fileInput) {
-    console.warn('Document upload elements not found, skipping setup');
-    return;
+  // Check if upload elements exist - more robust checking
+  if (!this.elements.uploadForm) {
+    console.warn('Document upload form not found, creating one dynamically');
+    
+    // Find a suitable container to add the form to
+    const documentSection = document.querySelector('.document-section') || 
+                           document.getElementById('case-detail');
+    
+    if (documentSection) {
+      // Create a form element dynamically
+      const uploadForm = document.createElement('form');
+      uploadForm.id = 'document-upload-form';
+      uploadForm.className = 'mt-4 p-4 border border-dashed border-gray-300 rounded';
+      uploadForm.innerHTML = `
+        <div class="mb-3">
+          <label for="document-file-input" class="block text-sm font-medium text-gray-700 mb-1">
+            选择文件
+          </label>
+          <input type="file" id="document-file-input" 
+                 class="w-full p-2 border border-gray-300 rounded" 
+                 accept=".pdf,.jpg,.jpeg,.png">
+        </div>
+        <div class="mb-3">
+          <label for="document-type-select" class="block text-sm font-medium text-gray-700 mb-1">
+            文档类型
+          </label>
+          <select id="document-type-select" class="w-full p-2 border border-gray-300 rounded">
+            <option value="待分类">待分类</option>
+            <option value="病历">病历</option>
+            <option value="诊断证明">诊断证明</option>
+            <option value="检查报告">检查报告</option>
+            <option value="事故认定书">事故认定书</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+        <button type="submit" id="upload-document-btn" 
+                class="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+          上传文档
+        </button>
+      `;
+      
+      // Add the form to the document
+      documentSection.appendChild(uploadForm);
+      
+      // Update the elements reference
+      this.elements.uploadForm = uploadForm;
+      this.elements.fileInput = document.getElementById('document-file-input');
+      this.elements.documentTypeSelect = document.getElementById('document-type-select');
+      this.elements.uploadBtn = document.getElementById('upload-document-btn');
+      
+      console.log('Created document upload form dynamically');
+    } else {
+      console.error('Could not find a suitable container for the upload form');
+      return;
+    }
   }
   
-  // Make sure the upload form has the correct event listener
+  // Now that we've ensured the form exists, set up the event listener
   this.elements.uploadForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    this.uploadDocument();
+    if (typeof this.uploadDocument === 'function') {
+      this.uploadDocument();
+    } else {
+      console.error('uploadDocument method not found');
+    }
   });
   
   // Add drag and drop support for the upload area if it exists
-  const uploadArea = document.getElementById('document-upload-area');
+  const uploadArea = document.getElementById('document-upload-area') || this.elements.uploadForm;
   if (uploadArea) {
     // Prevent default drag behaviors
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -185,14 +240,18 @@ CaseManagement.prototype.setupDirectDocumentUpload = function() {
     // Handle dropped files
     uploadArea.addEventListener('drop', (e) => {
       if (!this.selectedCase) {
-        this.showToast('请先选择案件', 'error');
+        if (typeof this.showToast === 'function') {
+          this.showToast('请先选择案件', 'error');
+        } else {
+          alert('请先选择案件');
+        }
         return;
       }
       
       const dt = e.dataTransfer;
       const files = dt.files;
       
-      if (files.length > 0) {
+      if (files.length > 0 && this.elements.fileInput) {
         this.elements.fileInput.files = files;
         // Trigger file input change event
         const event = new Event('change', { bubbles: true });
