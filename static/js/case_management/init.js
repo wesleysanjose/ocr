@@ -7,15 +7,25 @@
 document.addEventListener ('DOMContentLoaded', () => {
   console.log ('Initializing case management system...');
 
-  // Create case management instance
-  window.caseManagement = new CaseManagement ();
+  // Check if CaseManagement class is available
+  if (typeof CaseManagement === 'undefined') {
+    console.error (
+      'CaseManagement class not found. Make sure main.js is loaded correctly.'
+    );
+    return;
+  }
 
-  // Set up document upload after everything is loaded
-  setTimeout (() => {
-    if (window.caseManagement) {
-      window.caseManagement.setupDirectDocumentUpload ();
-    }
-  }, 500);
+  // Create case management instance
+  if (!window.caseManagement) {
+    window.caseManagement = new CaseManagement ();
+
+    // Set up document upload after everything is loaded
+    setTimeout (() => {
+      if (window.caseManagement) {
+        window.caseManagement.setupDirectDocumentUpload ();
+      }
+    }, 500);
+  }
 
   // Add new case button handler if not already handled in CaseManagement
   const newCaseBtn = document.getElementById ('new-case-btn');
