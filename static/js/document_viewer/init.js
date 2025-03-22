@@ -15,20 +15,21 @@
     if (!window.documentViewer) {
       console.log ('Creating new DocumentViewer instance');
       window.documentViewer = new DocumentViewer ();
-
+  
       // Bind events for each module
       bindAllViewerEvents ();
+      
+      // Log successful initialization
+      console.log('Document viewer successfully initialized and ready to use');
     } else {
       console.log ('DocumentViewer instance already exists');
     }
-
+  
     // Setup drag and drop for field organization
     setupDragAndDrop ();
-
+  
     // Setup field placeholders after everything is loaded
     setupFieldPlaceholders ();
-
-    console.log ('Document viewer initialization complete');
   }
 
   /**

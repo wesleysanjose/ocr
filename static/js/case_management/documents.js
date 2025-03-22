@@ -178,28 +178,28 @@
    */
   CaseManagement.prototype.viewDocument = function (documentId) {
     logger.debug (`viewDocument called for document ${documentId}`);
-
+  
     if (!this.selectedCase) {
       logger.error ('No case selected for document viewing');
       this.showToast ('请先选择案件', 'error');
       return Promise.reject (new Error ('No case selected'));
     }
-
+  
     if (!documentId) {
       logger.error ('No document ID provided');
       this.showToast ('文档ID无效', 'error');
       return Promise.reject (new Error ('Invalid document ID'));
     }
-
+  
     // Show loading indicator
     const loadingToast = this.showToast ('正在加载文档...', 'info', false);
-
+  
     // Get document details with timeout
     return new Promise ((resolve, reject) => {
       const timeoutId = setTimeout (() => {
         reject (new Error ('Document fetch timed out'));
       }, 30000); // 30 second timeout
-
+  
       this.api
         .getDocument (this.selectedCase.id, documentId)
         .then (document => {
@@ -213,36 +213,46 @@
     })
       .then (document => {
         logger.info ('Document fetched successfully', document);
-
+  
         // Remove loading toast
         if (loadingToast && loadingToast.parentNode) {
           document.body.removeChild (loadingToast);
         }
-
+  
         if (!document || !document.file_path) {
           throw new Error ('Invalid document data received');
         }
-
+  
+        // Check if document viewer is initialized
         if (window.documentViewer) {
-          window.documentViewer.openDocument (
+          logger.debug('Using document viewer to open document', document.name);
+          
+          // Prevent default link behavior that might cause page navigation
+          if (event && event.preventDefault) {
+            event.preventDefault();
+          }
+          
+          // Open the document in the viewer
+          window.documentViewer.openDocument(
             document.name || '未命名文档',
             document.file_path
           );
+          
+          return document;
         } else {
           logger.warn ('Document viewer not initialized, opening in new tab');
           window.open (document.file_path, '_blank');
+          return document;
         }
-
-        return document;
       })
       .catch (error => {
         logger.error ('Failed to get document details', error);
-
+  
         // Remove loading toast
         if (loadingToast && loadingToast.parentNode) {
           document.body.removeChild (loadingToast);
         }
-
+  
         // Show appropriate error message
         if (error.message === 'Document fetch timed out') {
           this.showToast ('文档加载超时', 'error');
@@ -251,7 +261,7 @@
         } else {
           this.showToast ('无法查看文档', 'error');
         }
-
+  
         throw error;
       });
   };

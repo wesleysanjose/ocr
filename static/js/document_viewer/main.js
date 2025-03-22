@@ -247,6 +247,57 @@ class DocumentViewer {
       console.log (`- ${key}: ${value ? 'Found' : 'Missing'}`);
     }
   }
+
+  /**
+   * Open a document for viewing
+   * @param {string} documentName - Name of the document
+   * @param {string} documentPath - Path to the document file
+   */
+  openDocument(documentName, documentPath) {
+    console.log(`Opening document: ${documentName} at ${documentPath}`);
+    
+    // Show the document viewer
+    if (this.elements.container) {
+      this.elements.container.classList.remove('hidden');
+    } else {
+      console.error('Document viewer container element not found');
+      return;
+    }
+    
+    // Set document title
+    if (this.elements.documentTitle) {
+      this.elements.documentTitle.textContent = documentName || '未命名文档';
+    }
+    
+    // Show loading state
+    this.showLoader('正在加载文档...');
+    
+    // Load document data
+    this.loadDocumentData(documentPath)
+      .then(documentData => {
+        this.currentDocument = documentData;
+        this.renderDocument();
+      })
+      .catch(error => {
+        console.error('Error loading document:', error);
+        this.showError(`无法加载文档: ${error.message}`);
+      });
+  }
+
+  /**
+   * Load document data from server
+   * @param {string} documentPath - Path to the document
+   * @returns {Promise} - Promise resolving to document data
+   */
+  loadDocumentData(documentPath) {
+    return fetch(`/api/document?path=${encodeURIComponent(documentPath)}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      });
+  }
 }
 
 // Make DocumentViewer available globally
