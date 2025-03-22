@@ -92,3 +92,33 @@ def parse_key_value_text(text: str) -> dict:
                 break
                 
     return result
+
+# utils/helpers.py (add this function)
+
+def convert_object_ids(obj):
+    """
+    Recursively convert ObjectId to string in MongoDB documents
+    
+    Args:
+        obj: MongoDB document or list of documents
+        
+    Returns:
+        Document with ObjectId converted to string
+    """
+    from bson import ObjectId
+    
+    if isinstance(obj, list):
+        return [convert_object_ids(item) for item in obj]
+    elif isinstance(obj, dict):
+        for key, value in list(obj.items()):
+            if isinstance(value, ObjectId):
+                obj['id'] = str(value) if key == '_id' else str(value)
+                if key == '_id':
+                    del obj[key]
+            elif isinstance(value, (dict, list)):
+                obj[key] = convert_object_ids(value)
+        return obj
+    elif isinstance(obj, ObjectId):
+        return str(obj)
+    else:
+        return obj

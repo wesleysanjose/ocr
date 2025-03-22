@@ -661,47 +661,35 @@ def init_api(config):
             logger.error(f"Failed to get client {client_id}: {e}", exc_info=True)
             return jsonify({'error': 'Failed to get client'}), 500
     
-    @bp.route('/clients', methods=['GET'])
-    def list_clients():
-        """List clients/tenants"""
-        try:
-            # Get query parameters
-            status = request.args.get('status')
-            limit = int(request.args.get('limit', 50))
-            skip = int(request.args.get('skip', 0))
-            
-            # List clients
-            clients = client_model.list(
-                status=status,
-                limit=limit,
-                skip=skip
-            )
-            
-            return jsonify({
-                'clients': clients,
-                'count': len(clients),
-                'total': len(clients)  # This should be updated to get actual total count
-            }), 200
-            
-        except Exception as e:
-            logger.error(f"Failed to list clients: {e}", exc_info=True)
-            return jsonify({'error': 'Failed to list clients'}), 500
-    
-    @bp.route('/clients/<client_id>', methods=['PUT'])
-    def update_client(client_id):
-        """Update a client/tenant"""
-        try:
-            data = request.json
-            
-            # Update client
-            success = client_model.update(client_id, data)
-            if not success:
-                return jsonify({'error': 'Client not found or not updated'}), 404
-                
-            return jsonify({'message': 'Client updated successfully'}), 200
-            
-        except Exception as e:
-            logger.error(f"Failed to update client {client_id}: {e}", exc_info=True)
-            return jsonify({'error': 'Failed to update client'}), 500
-    
-    return bp
+    # api/routes.py
+
+from utils.helpers import convert_object_ids
+
+@bp.route('/clients', methods=['GET'])
+def list_clients():
+    """List clients/tenants"""
+    try:
+        # Get query parameters
+        status = request.args.get('status')
+        limit = int(request.args.get('limit', 50))
+        skip = int(request.args.get('skip', 0))
+        
+        # List clients
+        clients = client_model.list(
+            status=status,
+            limit=limit,
+            skip=skip
+        )
+        
+        # Process MongoDB documents
+        processed_clients = process_mongodb_doc(clients)
+        
+        return jsonify({
+            'clients': processed_clients,
+            'count': len(clients),
+            'total': len(clients)  # This should be updated to get actual total count
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Failed to list clients: {e}", exc_info=True)
+        return jsonify({'error': 'Failed to list clients'}), 500
