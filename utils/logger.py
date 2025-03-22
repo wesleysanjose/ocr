@@ -54,7 +54,9 @@ def setup_logger(app, log_level=None):
 
     # Log startup information
     app.logger.info("="*50)
-    app.logger.info(f"Starting Application in {app.env} mode")
+    # Fix: Use app.config['ENV'] instead of app.env
+    env_mode = app.config.get('ENV', 'development' if app.debug else 'production')
+    app.logger.info(f"Starting Application in {env_mode} mode")
     app.logger.info(f"Log level: {logging.getLevelName(log_level)}")
     app.logger.info("="*50)
 
