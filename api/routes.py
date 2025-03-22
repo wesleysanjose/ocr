@@ -326,6 +326,13 @@ def init_api(config):
             tenant_id = request.form.get('tenant_id')
             case_id = request.form.get('case_id')
             
+            # Check for invalid IDs
+            if not tenant_id or tenant_id == "null" or tenant_id == "undefined":
+                return jsonify({'error': 'Invalid tenant ID'}), 400
+                
+            if not case_id or case_id == "null" or case_id == "undefined":
+                return jsonify({'error': 'Invalid case ID'}), 400
+            
             client = validate_tenant(tenant_id)
             if not client:
                 return jsonify({'error': 'Invalid tenant ID'}), 403
@@ -335,82 +342,73 @@ def init_api(config):
             if not case:
                 return jsonify({'error': 'Case not found'}), 404
                 
-            # Check if file was provided
-            if 'file' not in request.files:
-                return jsonify({'error': 'No file provided'}), 400
+            # Rest of the function...
                 
-            file = request.files['file']
-            if not file.filename:
-                return jsonify({'error': 'No file selected'}), 400
-                
-            if not allowed_file(file.filename, config.ALLOWED_EXTENSIONS):
-                return jsonify({'error': 'File type not allowed'}), 400
-            
-            # Process document
-            filename = secure_filename(file.filename)
-            metadata = {
-                'original_filename': filename,
-                'description': request.form.get('description', ''),
-                'tags': json.loads(request.form.get('tags', '[]')),
-                'created_by': request.form.get('created_by')
-            }
-            
-            result = document_processor.process_document(
-                file_obj=file,
-                filename=filename,
-                tenant_id=tenant_id,
-                case_id=case_id,
-                document_metadata=metadata
-            )
-            
-            # Create document record in database
-            document_id = document_model.create(
-                tenant_id=tenant_id,
-                case_id=case_id,
-                filename=filename,
-                document_type=result['document_type'],
-                storage_paths={
-                    'original': result['original_path'],
-                    'base_path': f"tenants/{tenant_id}/cases/{case_id}/documents/{result['document_id']}"
-                },
-                page_count=len(result['pages']),
-                ocr_status='complete',
-                metadata=metadata,
-                created_by=request.form.get('created_by')
-            )
-            
-            # Add document to case
-            case_model.add_document(
-                case_id=case_id,
-                tenant_id=tenant_id,
-                document_id=document_id,
-                document_metadata={
-                    'filename': filename,
-                    'document_type': result['document_type'],
-                    'page_count': len(result['pages'])
+                # Process document
+                filename = secure_filename(file.filename)
+                metadata = {
+                    'original_filename': filename,
+                    'description': request.form.get('description', ''),
+                    'tags': json.loads(request.form.get('tags', '[]')),
+                    'created_by': request.form.get('created_by')
                 }
-            )
-            
-            # Add page data to document
-            for page in result['pages']:
-                document_model.add_page_data(
-                    document_id=document_id,
+                
+                result = document_processor.process_document(
+                    file_obj=file,
+                    filename=filename,
                     tenant_id=tenant_id,
-                    page_number=page['page_number'],
-                    page_data={
-                        'image_path': page['image_path'],
-                        'thumbnail_path': page['thumbnail_path'],
-                        'text_path': page['text_path'],
-                        'ocr_data': page['ocr_data']['raw']
+                    case_id=case_id,
+                    document_metadata=metadata
+                )
+                
+                # Create document record in database
+                document_id = document_model.create(
+                    tenant_id=tenant_id,
+                    case_id=case_id,
+                    filename=filename,
+                    document_type=result['document_type'],
+                    storage_paths={
+                        'original': result['original_path'],
+                        'base_path': f"tenants/{tenant_id}/cases/{case_id}/documents/{result['document_id']}"
+                    },
+                    page_count=len(result['pages']),
+                    ocr_status='complete',
+                    metadata=metadata,
+                    created_by=request.form.get('created_by')
+                )
+                
+                # Add document to case
+                case_model.add_document(
+                    case_id=case_id,
+                    tenant_id=tenant_id,
+                    document_id=document_id,
+                    document_metadata={
+                        'filename': filename,
+                        'document_type': result['document_type'],
+                        'page_count': len(result['pages'])
                     }
                 )
-            
-            return jsonify({
-                'document_id': document_id,
-                'pages': len(result['pages']),
-                'message': 'Document uploaded and processed successfully'
-            }), 201
-            
+                
+                # Add page data to document
+                for page in result['pages']:
+                    document_model.add_page_data(
+                        document_id=document_id,
+                        tenant_id=tenant_id,
+                        page_number=page['page_number'],
+                        page_data={
+                            'image_path': page['image_path'],
+                            'thumbnail_path': page['thumbnail_path'],
+                            'text_path': page['text_path'],
+                            'ocr_data': page['ocr_data']['raw']
+                        }
+                    )
+                
+                return jsonify({
+                    'document_id': document_id,
+                    'pages': len(result['pages']),
+                    'message': 'Document uploaded and processed successfully'
+                }), 201
+                
         except Exception as e:
             logger.error(f"Document upload failed: {e}", exc_info=True)
             return jsonify({'error': 'Document upload failed'}), 500

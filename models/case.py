@@ -85,14 +85,22 @@ class Case:
             Case document or None
         """
         try:
+            # Validate inputs
+            if not case_id or case_id == "null" or case_id == "undefined":
+                logger.warning(f"Invalid case ID: {case_id}")
+                return None
+                
+            if not tenant_id or tenant_id == "null" or tenant_id == "undefined":
+                logger.warning(f"Invalid tenant ID: {tenant_id}")
+                return None
+                
             query = {
                 "_id": ObjectId(case_id),
-                "tenant_id": tenant_id,
+                "tenant_id": ObjectId(tenant_id) if tenant_id else None,
                 "deleted": False
             }
             case = self.db.find_one(self.collection_name, query)
-            if case:
-                case["id"] = str(case["_id"])
+            
             return case
         except Exception as e:
             logger.error(f"Failed to get case {case_id}: {e}")
