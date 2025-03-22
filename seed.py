@@ -7,10 +7,10 @@ import os
 import random
 from bson import ObjectId
 
-# MongoDB connection settings
+# MongoDB connection settings - note the database name matches your application
 MONGO_HOST = "localhost"
 MONGO_PORT = 27017
-MONGO_DB = "forensic_docs"
+MONGO_DB = "forensic_docs_dev"  # Match your app's database name
 
 # Connect to MongoDB
 client = pymongo.MongoClient(MONGO_HOST, MONGO_PORT)
@@ -197,7 +197,9 @@ case_statuses = ["open", "in_progress", "closed"]
 for tenant_idx, client_id in enumerate(client_ids):
     # Get users for this tenant
     tenant_users = [u for u in users_data if u.get("tenant_id") == client_id]
-    
+    if not tenant_users:
+        continue
+        
     # Create 3-5 cases per tenant
     num_cases = random.randint(3, 5)
     for i in range(num_cases):
@@ -242,8 +244,9 @@ for case_idx, case_id in enumerate(case_ids):
         document_type = random.choice(document_types)
         page_count = 1 if document_type == "image" else random.randint(1, 10)
         
+        document_id = ObjectId()
         document = {
-            "_id": ObjectId(),
+            "_id": document_id,
             "tenant_id": case["tenant_id"],
             "case_id": case_id,
             "filename": f"document_{case_idx}_{i}.{'jpg' if document_type == 'image' else 'pdf'}",
@@ -278,7 +281,7 @@ for case_idx, case_id in enumerate(case_ids):
         
         # Add document reference to case
         case_document_ref = {
-            "document_id": document["_id"],
+            "document_id": document_id,
             "added_at": created_date,
             "filename": document["filename"],
             "document_type": document_type,
@@ -286,9 +289,12 @@ for case_idx, case_id in enumerate(case_ids):
         }
         case["documents"].append(case_document_ref)
 
-result = db.documents.insert_many(documents_data)
-document_ids = result.inserted_ids
-print(f"Added {len(document_ids)} documents")
+if documents_data:
+    result = db.documents.insert_many(documents_data)
+    document_ids = result.inserted_ids
+    print(f"Added {len(document_ids)} documents")
+else:
+    print("No documents to add")
 
 # Update cases with document references
 for case in cases_data:
@@ -331,8 +337,9 @@ for case_idx, case_id in enumerate(case_ids):
             "template": report_type
         }
         
+        report_id = ObjectId()
         report = {
-            "_id": ObjectId(),
+            "_id": report_id,
             "tenant_id": case["tenant_id"],
             "case_id": case_id,
             "title": f"Report {i} for Case {case_idx}",
@@ -372,7 +379,7 @@ for case_idx, case_id in enumerate(case_ids):
         
         # Add report reference to case
         case_report_ref = {
-            "report_id": report["_id"],
+            "report_id": report_id,
             "created_at": created_date,
             "title": report["title"],
             "report_type": report_type,
@@ -380,9 +387,12 @@ for case_idx, case_id in enumerate(case_ids):
         }
         case["reports"].append(case_report_ref)
 
-result = db.reports.insert_many(reports_data)
-report_ids = result.inserted_ids
-print(f"Added {len(report_ids)} reports")
+if reports_data:
+    result = db.reports.insert_many(reports_data)
+    report_ids = result.inserted_ids
+    print(f"Added {len(report_ids)} reports")
+else:
+    print("No reports to add")
 
 # Update cases with report references
 for case in cases_data:
