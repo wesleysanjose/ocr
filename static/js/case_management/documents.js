@@ -216,7 +216,7 @@
 
         // Remove loading toast
         if (loadingToast && loadingToast.parentNode) {
-          document.body.removeChild (loadingToast);
+          loadingToast.parentNode.removeChild (loadingToast);
         }
 
         if (!document || !document.file_path) {

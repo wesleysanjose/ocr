@@ -173,9 +173,13 @@
      * Renders the documents list
      */
   CaseManagement.prototype.renderDocumentsList = function () {
-    if (!this.elements.documentsList) return;
+    if (!this.elements.documentsList) {
+      console.warn('Document list element not found in the DOM');
+      return;
+    }
 
     const documents = this.selectedCase.documents || [];
+    console.log('Rendering documents list:', documents.length, 'documents found');
 
     if (documents.length === 0) {
       this.elements.documentsList.innerHTML =
@@ -211,17 +215,54 @@
       .join ('');
 
     this.elements.documentsList.innerHTML = html;
+    console.log('Documents list HTML rendered successfully');
 
     // Add view handlers
     const viewButtons = this.elements.documentsList.querySelectorAll (
       '.btn-view'
     );
+    console.log(`Found ${viewButtons.length} document view buttons to attach handlers to`);
+    
     viewButtons.forEach (btn => {
-      btn.addEventListener ('click', () => {
-        const docId = btn.dataset.id;
-        this.viewDocument (docId);
+      btn.addEventListener ('click', (event) => {
+        try {
+          // Prevent default behavior to avoid page reload
+          event.preventDefault();
+          event.stopPropagation();
+          
+          const docId = btn.dataset.id;
+          console.log(`View button clicked for document ID: ${docId}`);
+          
+          // Check if document viewer is available
+          if (window.documentViewer) {
+            console.log('Document viewer is available');
+          } else {
+            console.warn('Document viewer is NOT available - may open in new tab instead');
+          }
+          
+          // Log selected case info
+          console.log('Current selected case:', 
+            this.selectedCase ? 
+            { id: this.selectedCase.id, name: this.selectedCase.name } : 
+            'No case selected');
+          
+          // Call the view document method
+          this.viewDocument(docId);
+        } catch (error) {
+          console.error('Error in document view button click handler:', error);
+          this.showToast('查看文档时出错: ' + error.message, 'error');
+        }
       });
+      
+      // Add a data attribute to indicate handler was attached
+      btn.setAttribute('data-handler-attached', 'true');
     });
+    
+    // Verify handlers were attached
+    const buttonsWithHandlers = this.elements.documentsList.querySelectorAll(
+      '.btn-view[data-handler-attached="true"]'
+    );
+    console.log(`Successfully attached handlers to ${buttonsWithHandlers.length}/${viewButtons.length} buttons`);
   };
 
   /**
