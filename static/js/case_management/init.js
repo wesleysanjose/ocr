@@ -18,13 +18,6 @@ document.addEventListener ('DOMContentLoaded', () => {
   // Create case management instance
   if (!window.caseManagement) {
     window.caseManagement = new CaseManagement ();
-
-    // Set up document upload after everything is loaded
-    setTimeout (() => {
-      if (window.caseManagement) {
-        window.caseManagement.setupDirectDocumentUpload ();
-      }
-    }, 500);
   }
 
   // Add new case button handler if not already handled in CaseManagement
