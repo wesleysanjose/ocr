@@ -16,7 +16,7 @@ class CaseManagement {
 
     // Initialize elements object first - this is the key fix
     this.elements = {};
-    
+
     // Initialize components
     this.initElements ();
     this.bindEvents ();
@@ -111,9 +111,46 @@ class CaseManagement {
       );
     }
 
-    // Document upload form
-    if (this.elements.uploadForm) {
-      this.elements.uploadForm.addEventListener ('submit', e => {
+    if (this.elements.fileInput) {
+      this.elements.fileInput.addEventListener ('change', e => {
+        // Update UI to show selected file
+        const file = e.target.files[0];
+        if (file) {
+          const fileNameDisplay = document.createElement ('div');
+          fileNameDisplay.className = 'mt-2 text-sm text-gray-600';
+          fileNameDisplay.textContent = `已选择: ${file.name}`;
+          fileNameDisplay.id = 'selected-file-name';
+
+          // Check if uploadForm exists before using querySelector
+          if (this.elements.uploadForm) {
+            // Remove any previous file name display
+            const existingDisplay = this.elements.uploadForm.querySelector (
+              '.selected-file-name'
+            );
+            if (existingDisplay) {
+              existingDisplay.remove ();
+            }
+
+            // Add the new file name display
+            fileNameDisplay.classList.add ('selected-file-name');
+            this.elements.uploadForm.appendChild (fileNameDisplay);
+          } else {
+            // If uploadForm doesn't exist, append to fileInput's parent instead
+            fileNameDisplay.classList.add ('selected-file-name');
+            this.elements.fileInput.parentNode.appendChild (fileNameDisplay);
+          }
+
+          // Enable upload button
+          if (this.elements.uploadBtn) {
+            this.elements.uploadBtn.disabled = false;
+          }
+        }
+      });
+    }
+
+    // Upload button click handler - now this is the only place that triggers upload
+    if (this.elements.uploadBtn) {
+      this.elements.uploadBtn.addEventListener ('click', e => {
         e.preventDefault ();
         this.uploadDocument ();
       });

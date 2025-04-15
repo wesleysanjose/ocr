@@ -139,6 +139,11 @@
           this.elements.uploadForm.reset ();
         }
 
+        // clean up selected-file-name
+        if (this.elements.selectedFileName) {
+          this.elements.selectedFileName.textContent = '';
+        }
+
         // Refresh documents list
         this.loadCaseDetail (this.selectedCase.id);
 

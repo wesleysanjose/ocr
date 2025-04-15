@@ -174,12 +174,16 @@
      */
   CaseManagement.prototype.renderDocumentsList = function () {
     if (!this.elements.documentsList) {
-      console.warn('Document list element not found in the DOM');
+      console.warn ('Document list element not found in the DOM');
       return;
     }
 
     const documents = this.selectedCase.documents || [];
-    console.log('Rendering documents list:', documents.length, 'documents found');
+    console.log (
+      'Rendering documents list:',
+      documents.length,
+      'documents found'
+    );
 
     if (documents.length === 0) {
       this.elements.documentsList.innerHTML =
@@ -215,54 +219,62 @@
       .join ('');
 
     this.elements.documentsList.innerHTML = html;
-    console.log('Documents list HTML rendered successfully');
+    console.log ('Documents list HTML rendered successfully');
 
     // Add view handlers
     const viewButtons = this.elements.documentsList.querySelectorAll (
       '.btn-view'
     );
-    console.log(`Found ${viewButtons.length} document view buttons to attach handlers to`);
-    
+    console.log (
+      `Found ${viewButtons.length} document view buttons to attach handlers to`
+    );
+
     viewButtons.forEach (btn => {
-      btn.addEventListener ('click', (event) => {
+      btn.addEventListener ('click', event => {
         try {
           // Prevent default behavior to avoid page reload
-          event.preventDefault();
-          event.stopPropagation();
-          
+          event.preventDefault ();
+          event.stopPropagation ();
+
           const docId = btn.dataset.id;
-          console.log(`View button clicked for document ID: ${docId}`);
-          
+          console.log (`View button clicked for document ID: ${docId}`);
+
           // Check if document viewer is available
           if (window.documentViewer) {
-            console.log('Document viewer is available');
+            console.log ('Document viewer is available');
           } else {
-            console.warn('Document viewer is NOT available - may open in new tab instead');
+            console.warn (
+              'Document viewer is NOT available - may open in new tab instead'
+            );
           }
-          
+
           // Log selected case info
-          console.log('Current selected case:', 
-            this.selectedCase ? 
-            { id: this.selectedCase.id, name: this.selectedCase.name } : 
-            'No case selected');
-          
+          console.log (
+            'Current selected case:',
+            this.selectedCase
+              ? {id: this.selectedCase.id, name: this.selectedCase.name}
+              : 'No case selected'
+          );
+
           // Call the view document method
-          this.viewDocument(docId);
+          this.viewDocument (docId);
         } catch (error) {
-          console.error('Error in document view button click handler:', error);
-          this.showToast('查看文档时出错: ' + error.message, 'error');
+          console.error ('Error in document view button click handler:', error);
+          this.showToast ('查看文档时出错: ' + error.message, 'error');
         }
       });
-      
+
       // Add a data attribute to indicate handler was attached
-      btn.setAttribute('data-handler-attached', 'true');
+      btn.setAttribute ('data-handler-attached', 'true');
     });
-    
+
     // Verify handlers were attached
-    const buttonsWithHandlers = this.elements.documentsList.querySelectorAll(
+    const buttonsWithHandlers = this.elements.documentsList.querySelectorAll (
       '.btn-view[data-handler-attached="true"]'
     );
-    console.log(`Successfully attached handlers to ${buttonsWithHandlers.length}/${viewButtons.length} buttons`);
+    console.log (
+      `Successfully attached handlers to ${buttonsWithHandlers.length}/${viewButtons.length} buttons`
+    );
   };
 
   /**
@@ -277,17 +289,17 @@
       toast = document.createElement ('div');
       toast.id = 'toast';
       toast.className =
-        'fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg transition-opacity duration-300 opacity-0';
+        'fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg z-100 transition-opacity duration-300 opacity-0';
       document.body.appendChild (toast);
     }
 
     // Set toast styling based on type
     if (type === 'success') {
       toast.className =
-        'fixed bottom-4 right-4 px-4 py-2 bg-green-500 text-white rounded-lg shadow-lg transition-opacity duration-300 opacity-0';
+        'fixed bottom-4 right-4 px-4 py-2 bg-green-500 text-white rounded-lg shadow-lg z-100 transition-opacity duration-300 opacity-0';
     } else if (type === 'error') {
       toast.className =
-        'fixed bottom-4 right-4 px-4 py-2 bg-red-500 text-white rounded-lg shadow-lg transition-opacity duration-300 opacity-0';
+        'fixed bottom-4 right-4 px-4 py-2 bg-red-500 text-white rounded-lg shadow-lg z-100 transition-opacity duration-300 opacity-0';
     }
 
     // Set message
