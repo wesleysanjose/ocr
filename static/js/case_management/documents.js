@@ -219,7 +219,7 @@
           loadingToast.parentNode.removeChild (loadingToast);
         }
 
-        if (!document || !document.file_path) {
+        if (!document || !document.storage_path) {
           throw new Error ('Invalid document data received');
         }
 
@@ -238,7 +238,8 @@
           // Open the document in the viewer
           window.documentViewer.openDocument (
             document.name || '未命名文档',
-            document.file_path
+            document.file_path,
+            document
           );
 
           return document;

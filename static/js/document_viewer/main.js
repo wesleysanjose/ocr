@@ -7,33 +7,37 @@
 class DocumentViewer {
   constructor () {
     console.log ('Initializing DocumentViewer...');
+    
+    try {
+      // Document state
+      this.currentDocument = null;
+      this.currentCaseId = null;
+      this.currentPage = 1;
+      this.totalPages = 1;
+      this.zoom = 100;
 
-    // Document state
-    this.currentDocument = null;
-    this.currentCaseId = null;
-    this.currentPage = 1;
-    this.totalPages = 1;
-    this.zoom = 100;
+      // Field data
+      this.keyValueMap = new Map ();
+      this.selectedText = [];
+      this.fieldCategories = {
+        personal: [],
+        medical: [],
+        incident: [],
+        legal: [],
+      };
 
-    // Field data
-    this.keyValueMap = new Map ();
-    this.selectedText = [];
-    this.fieldCategories = {
-      personal: [],
-      medical: [],
-      incident: [],
-      legal: [],
-    };
+      // UI state
+      this.activeTab = 'preview-tab';
+      this.analysisController = null;
 
-    // UI state
-    this.activeTab = 'preview-tab';
-    this.analysisController = null;
+      // Initialize UI elements and bind events
+      this.initElements ();
+      this.bindEvents ();
 
-    // Initialize UI elements and bind events
-    this.initElements ();
-    this.bindEvents ();
-
-    console.log ('DocumentViewer initialized');
+      console.log ('DocumentViewer initialized successfully');
+    } catch (error) {
+      console.error('Error during DocumentViewer initialization:', error);
+    }
   }
 
   /**
@@ -41,77 +45,91 @@ class DocumentViewer {
    */
   initElements () {
     console.log ('Initializing document viewer elements');
-    this.elements = {
-      // Main container
-      container: document.getElementById ('document-viewer'),
-      closeViewerBtn: document.getElementById ('close-viewer'),
-      documentTitle: document.getElementById ('document-title'),
+    try {
+      this.elements = {
+        // Main container
+        container: document.getElementById ('document-viewer'),
+        closeViewerBtn: document.getElementById ('close-viewer'),
+        documentTitle: document.getElementById ('document-title'),
 
-      // Tab navigation
-      tabButtons: document.querySelectorAll ('.document-tab'),
-      tabContents: document.querySelectorAll ('.document-tab-content'),
+        // Tab navigation
+        tabButtons: document.querySelectorAll ('.document-tab'),
+        tabContents: document.querySelectorAll ('.document-tab-content'),
 
-      // Preview tab elements
-      previewSection: document.getElementById ('preview-section'),
-      previewImage: document.getElementById ('preview-image'),
-      pageInfo: document.getElementById ('page-info'),
-      prevPageBtn: document.getElementById ('prev-page'),
-      nextPageBtn: document.getElementById ('next-page'),
-      zoomInBtn: document.getElementById ('zoom-in'),
-      zoomOutBtn: document.getElementById ('zoom-out'),
-      zoomDisplay: document.getElementById ('zoom-level'),
+        // Preview tab elements
+        previewSection: document.getElementById ('preview-section'),
+        previewImage: document.getElementById ('preview-image'),
+        pageInfo: document.getElementById ('page-info'),
+        prevPageBtn: document.getElementById ('prev-page'),
+        nextPageBtn: document.getElementById ('next-page'),
+        zoomInBtn: document.getElementById ('zoom-in'),
+        zoomOutBtn: document.getElementById ('zoom-out'),
+        zoomDisplay: document.getElementById ('zoom-level'),
 
-      // OCR tab elements
-      ocrResults: document.getElementById ('ocr-results'),
-      pageSelectors: document.querySelectorAll ('.page-selector'),
-      selectedTextDisplay: document.getElementById ('selected-text-display'),
-      clearSelectionBtn: document.getElementById ('clear-selection-btn'),
-      processBtn: document.getElementById ('process-btn'),
+        // OCR tab elements
+        ocrResults: document.getElementById ('ocr-results'),
+        pageSelectors: document.querySelectorAll ('.page-selector'),
+        selectedTextDisplay: document.getElementById ('selected-text-display'),
+        clearSelectionBtn: document.getElementById ('clear-selection-btn'),
+        processBtn: document.getElementById ('process-btn'),
 
-      // Organize tab elements
-      kvDisplay: document.getElementById ('kv-display'),
-      fieldCategoryTabs: document.querySelectorAll ('.field-category-tab'),
-      categoryHeaders: document.querySelectorAll ('.category-header'),
-      categoryContents: document.querySelectorAll ('.category-content'),
-      addCustomFieldBtn: document.getElementById ('add-custom-field'),
-      copyAllFieldsBtn: document.getElementById ('copy-all-fields'),
-      applyToReportBtn: document.getElementById ('apply-to-report'),
+        // Organize tab elements
+        kvDisplay: document.getElementById ('kv-display'),
+        fieldCategoryTabs: document.querySelectorAll ('.field-category-tab'),
+        categoryHeaders: document.querySelectorAll ('.category-header'),
+        categoryContents: document.querySelectorAll ('.category-content'),
+        addCustomFieldBtn: document.getElementById ('add-custom-field'),
+        copyAllFieldsBtn: document.getElementById ('copy-all-fields'),
+        applyToReportBtn: document.getElementById ('apply-to-report'),
 
-      // Report tab elements
-      reportTemplate: document.getElementById ('report-template'),
-      loadTemplateBtn: document.getElementById ('load-template'),
-      previewReportBtn: document.getElementById ('preview-report'),
-      saveReportBtn: document.getElementById ('save-report'),
-      exportPdfBtn: document.getElementById ('export-pdf'),
+        // Report tab elements
+        reportTemplate: document.getElementById ('report-template'),
+        loadTemplateBtn: document.getElementById ('load-template'),
+        previewReportBtn: document.getElementById ('preview-report'),
+        saveReportBtn: document.getElementById ('save-report'),
+        exportPdfBtn: document.getElementById ('export-pdf'),
 
-      // Analysis tab elements
-      analysisScope: document.getElementById ('analysis-scope'),
-      analysisPrompt: document.getElementById ('analysis-prompt'),
-      analyzeBtn: document.getElementById ('analyze-btn'),
-      cancelAnalyzeBtn: document.getElementById ('cancel-analyze-btn'),
-      resetPromptBtn: document.getElementById ('reset-prompt-btn'),
-      analysisResults: document.getElementById ('analysis-results'),
+        // Analysis tab elements
+        analysisScope: document.getElementById ('analysis-scope'),
+        analysisPrompt: document.getElementById ('analysis-prompt'),
+        analyzeBtn: document.getElementById ('analyze-btn'),
+        cancelAnalyzeBtn: document.getElementById ('cancel-analyze-btn'),
+        resetPromptBtn: document.getElementById ('reset-prompt-btn'),
+        analysisResults: document.getElementById ('analysis-results'),
 
-      // Modal elements
-      modal: document.getElementById ('key-input-modal'),
-      modalText: document.getElementById ('modal-selected-text'),
-      keyInput: document.getElementById ('key-input'),
-      valueInput: document.getElementById ('value-input'),
-      categorySelect: document.getElementById ('category-select'),
-      modalSave: document.getElementById ('modal-save'),
-      modalCancel: document.getElementById ('modal-cancel'),
-    };
-
-    // Log missing elements for debugging
-    const missingElements = [];
-    for (const [key, value] of Object.entries (this.elements)) {
-      if (!value && !key.includes ('Btn') && !key.includes ('tab')) {
-        missingElements.push (key);
+        // Modal elements
+        modal: document.getElementById ('key-input-modal'),
+        modalText: document.getElementById ('modal-selected-text'),
+        keyInput: document.getElementById ('key-input'),
+        valueInput: document.getElementById ('value-input'),
+        categorySelect: document.getElementById ('category-select'),
+        modalSave: document.getElementById ('modal-save'),
+        modalCancel: document.getElementById ('modal-cancel'),
+      };
+    
+      // Log missing elements for debugging
+      const missingElements = [];
+      for (const [key, value] of Object.entries (this.elements)) {
+        if (!value && !key.includes ('Btn') && !key.includes ('tab')) {
+          missingElements.push (key);
+        }
       }
-    }
-
-    if (missingElements.length > 0) {
-      console.error ('Missing document viewer elements:', missingElements);
+    
+      if (missingElements.length > 0) {
+        console.error ('Missing document viewer elements:', missingElements);
+      }
+      
+      // Log found elements for debugging
+      console.debug('Document viewer container found:', !!this.elements.container);
+      console.debug('Document viewer tabs found:', this.elements.tabButtons?.length || 0);
+      
+      // Verify critical elements
+      if (!this.elements.container) {
+        throw new Error('Critical element missing: document-viewer container not found');
+      }
+    } catch (error) {
+      console.error('Error initializing document viewer elements:', error);
+      throw error; // Re-throw to handle in constructor
     }
   }
 
@@ -124,7 +142,14 @@ class DocumentViewer {
     // Close button
     if (this.elements.closeViewerBtn) {
       this.elements.closeViewerBtn.addEventListener ('click', () => {
+        // Add hidden class
         this.elements.container.classList.add ('hidden');
+        
+        // Also reset any inline styles that might override the hidden class
+        this.elements.container.style.display = 'none';
+        this.elements.container.style.visibility = 'hidden';
+        
+        console.debug('Document viewer hidden');
       });
     } else {
       console.error ('Close viewer button not found');
@@ -223,6 +248,9 @@ class DocumentViewer {
       this.elements.tabContents.forEach (content => {
         if (content.id === tabId) {
           content.classList.add ('active');
+          // 确保活动标签页内容可滚动
+          content.style.maxHeight = 'calc(80vh - 120px)'; // 减去标题和标签栏的高度
+          content.style.overflowY = 'auto';
         } else {
           content.classList.remove ('active');
         }
@@ -252,54 +280,159 @@ class DocumentViewer {
    * Open a document for viewing
    * @param {string} documentName - Name of the document
    * @param {string} documentPath - Path to the document file
+   * @param {Object} documentObject - Complete document object (optional)
    */
-  openDocument (documentName, documentPath) {
-    console.log (`Opening document: ${documentName} at ${documentPath}`);
-
-    // Show the document viewer
-    if (this.elements.container) {
-      this.elements.container.classList.remove ('hidden');
-    } else {
-      console.error ('Document viewer container element not found');
-      return;
-    }
-
-    // Set document title
-    if (this.elements.documentTitle) {
-      this.elements.documentTitle.textContent = documentName || '未命名文档';
-    }
-
-    // Show loading state
-    this.showLoader ('正在加载文档...');
-
-    // Load document data
-    this.loadDocumentData (documentPath)
-      .then (documentData => {
-        this.currentDocument = documentData;
-        this.renderDocument ();
-      })
-      .catch (error => {
-        console.error ('Error loading document:', error);
-        this.showError (`无法加载文档: ${error.message}`);
-      });
-  }
-
-  /**
-   * Load document data from server
-   * @param {string} documentPath - Path to the document
-   * @returns {Promise} - Promise resolving to document data
-   */
-  loadDocumentData (documentPath) {
-    return fetch (
-      `/api/document?path=${encodeURIComponent (documentPath)}`
-    ).then (response => {
-      if (!response.ok) {
-        throw new Error (
-          `Server returned ${response.status}: ${response.statusText}`
-        );
+  openDocument (documentName, documentPath, documentObject = null) {
+    console.log(`Opening document with name: "${documentName}", path: "${documentPath}"`);
+    
+    try {
+      // 首先显示文档查看器容器（对所有情况都需要）
+      if (this.elements.container) {
+        console.debug('Making document viewer visible');
+        this.elements.container.classList.remove('hidden');
+        
+        // 添加调试代码，确保元素可见
+        console.debug('Document viewer display style:', window.getComputedStyle(this.elements.container).display);
+        console.debug('Document viewer visibility:', window.getComputedStyle(this.elements.container).visibility);
+        console.debug('Document viewer opacity:', window.getComputedStyle(this.elements.container).opacity);
+        console.debug('Document viewer z-index:', window.getComputedStyle(this.elements.container).zIndex);
+        console.debug('Document viewer position:', window.getComputedStyle(this.elements.container).position);
+        
+        // 强制设置样式确保可见
+        this.elements.container.style.display = 'block';
+        this.elements.container.style.visibility = 'visible';
+        this.elements.container.style.opacity = '1';
+        this.elements.container.style.zIndex = '9999';
+        
+        // 添加滚动条样式
+        this.elements.container.style.maxHeight = '90vh'; // 设置最大高度为视口高度的90%
+        this.elements.container.style.overflowY = 'auto'; // 添加垂直滚动条
+        
+        // 检查容器尺寸
+        console.debug('Container dimensions:', 
+          this.elements.container.offsetWidth, 
+          'x', 
+          this.elements.container.offsetHeight);
+      } else {
+        console.error('Document viewer container element not found');
+        alert('文档查看器未正确初始化，请刷新页面后重试');
+        return;
       }
-      return response.json ();
-    });
+      
+      // 如果提供了完整的文档对象，直接使用
+      if (documentObject && typeof documentObject === 'object') {
+        console.debug('Using provided document object:', documentObject);
+        
+        // 设置文档标题
+        if (this.elements.documentTitle) {
+          this.elements.documentTitle.textContent = documentObject.filename || documentName || '未命名文档';
+        }
+        
+        // 直接使用文档对象
+        this.currentDocument = documentObject;
+        this.totalPages = documentObject.total_pages || documentObject.page_urls?.length || 1;
+        this.currentPage = 1;
+        
+        // 渲染文档
+        this.renderDocument();
+        return;
+      }
+      
+      // 以下是原有逻辑，当没有提供文档对象时执行
+      if (!documentPath) {
+        console.error('Document path is missing or empty');
+        this.showError('无法打开文档：文档路径无效');
+        return;
+      }
+
+      // 尝试从案例管理中获取文档
+      if (window.caseManagement && window.caseManagement.selectedCase) {
+        console.debug('Case management found with selected case:', window.caseManagement.selectedCase.id);
+        const caseId = window.caseManagement.selectedCase.id;
+
+        // Find documentId from documentPath or from documents array
+        let documentId = null;
+
+        // If we can extract documentId from the path
+        if (documentPath) {
+          const pathParts = documentPath.split ('/');
+          console.debug('Path parts:', pathParts);
+          
+          // Attempt to find the document ID in the path
+          for (const part of pathParts) {
+            if (
+              part.match(
+                /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+              )
+            ) {
+              documentId = part;
+              console.debug('Found document ID in path:', documentId);
+              break;
+            }
+          }
+        }
+
+        // If we couldn't extract from path, try to find by name
+        if (
+          !documentId &&
+          documentName &&
+          window.caseManagement.selectedCase.documents
+        ) {
+          console.debug('Searching for document by name:', documentName);
+          const doc = window.caseManagement.selectedCase.documents.find (
+            d => d.filename === documentName || d.name === documentName
+          );
+          if (doc) {
+            documentId = doc.id;
+            console.debug('Found document ID by name:', documentId);
+          }
+        }
+
+        // Call the existing viewDocument method if we have both IDs
+        if (caseId && documentId) {
+          console.log(`Viewing document with caseId: ${caseId}, documentId: ${documentId}`);
+          this.viewDocument (caseId, documentId);
+          return;
+        } else {
+          console.error('Could not determine document ID', {
+            caseId,
+            documentId,
+            documentName,
+            documentPath
+          });
+        }
+      } else {
+        console.error('Case management or selected case not available');
+      }
+
+      // If we couldn't use the case management approach, fall back to direct loading
+      // Set document title
+      if (this.elements.documentTitle) {
+        this.elements.documentTitle.textContent = documentName || '未命名文档';
+      } else {
+        console.warn('Document title element not found, cannot set title');
+      }
+
+      // Show loading state
+      this.showLoader ('正在加载文档...');
+
+      console.debug(`Attempting to load document data from: ${documentPath}`);
+      
+      // Load document data
+      this.loadDocumentData (documentPath)
+        .then (documentData => {
+          console.debug('Document data loaded successfully:', documentData);
+          this.currentDocument = documentData;
+          this.renderDocument ();
+        })
+        .catch (error => {
+          console.error ('Error loading document:', error);
+          this.showError (`无法加载文档: ${error.message}`);
+        });
+    } catch (error) {
+      console.error('Error in openDocument:', error);
+      this.showError(`打开文档时出错: ${error.message}`);
+    }
   }
 
   /**
@@ -313,83 +446,21 @@ class DocumentViewer {
       return;
     }
 
-    // Set total pages
-    this.totalPages = this.currentDocument.pages || 1;
+    // 设置总页数
+    this.totalPages = this.currentDocument.total_pages || 
+                      this.currentDocument.page_urls?.length || 1;
 
-    // Reset to first page
+    // 重置到第一页
     this.currentPage = 1;
 
-    // Update page info
+    // 更新页面信息
     this.updatePageInfo ();
 
-    // Load the first page
+    // 加载第一页
     this.loadPage (this.currentPage);
 
-    // Switch to preview tab
+    // 切换到预览标签
     this.switchTab ('preview-tab');
-  }
-
-  /**
-   * Update page information display
-   */
-  updatePageInfo () {
-    if (this.elements.pageInfo) {
-      this.elements.pageInfo.textContent = `页面 ${this.currentPage} / ${this.totalPages}`;
-    }
-  }
-
-  // Add to DocumentViewer class in static/js/document_viewer/main.js
-  openDocument (documentName, documentPath) {
-    // Show the document viewer container
-    if (this.elements.container) {
-      this.elements.container.classList.remove ('hidden');
-    }
-
-    // We need to extract caseId and documentId from available information
-    // For now, we'll use the currently selected case and the document path
-    if (window.caseManagement && window.caseManagement.selectedCase) {
-      const caseId = window.caseManagement.selectedCase.id;
-
-      // Find documentId from documentPath or from documents array
-      let documentId = null;
-
-      // If we can extract documentId from the path
-      if (documentPath) {
-        const pathParts = documentPath.split ('/');
-        // Attempt to find the document ID in the path
-        for (const part of pathParts) {
-          if (
-            part.match (
-              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
-            )
-          ) {
-            documentId = part;
-            break;
-          }
-        }
-      }
-
-      // If we couldn't extract from path, try to find by name
-      if (
-        !documentId &&
-        documentName &&
-        window.caseManagement.selectedCase.documents
-      ) {
-        const doc = window.caseManagement.selectedCase.documents.find (
-          d => d.filename === documentName || d.name === documentName
-        );
-        if (doc) documentId = doc.id;
-      }
-
-      // Call the existing viewDocument method if we have both IDs
-      if (caseId && documentId) {
-        this.viewDocument (caseId, documentId);
-        return;
-      }
-    }
-
-    // Fallback: Show error message
-    this.showError ('无法查看文档：无法确定案件或文档ID');
   }
 
   /**
@@ -399,7 +470,7 @@ class DocumentViewer {
   loadPage (pageNumber) {
     console.log (`Loading page ${pageNumber}`);
 
-    if (!this.currentDocument || !this.currentDocument.pages) {
+    if (!this.currentDocument) {
       this.showError ('Document data is invalid');
       return;
     }
@@ -409,42 +480,56 @@ class DocumentViewer {
       return;
     }
 
-    // Show loading state
+    // 显示加载状态
     this.showLoader (`加载第 ${pageNumber} 页...`);
 
-    // Get page URL
-    const pageUrl = this.currentDocument.page_urls
-      ? this.currentDocument.page_urls[pageNumber - 1]
-      : `${this.currentDocument.base_url}/page-${pageNumber}.png`;
+    // 获取页面URL
+    let pageUrl;
+    if (this.currentDocument.page_urls && this.currentDocument.page_urls.length > 0) {
+      // 新格式：使用page_urls数组中的url属性
+      const pageData = this.currentDocument.page_urls[pageNumber - 1];
+      pageUrl = pageData ? pageData.url : null;
+    } else if (this.currentDocument.preview_url) {
+      // 单页文档：使用preview_url
+      pageUrl = this.currentDocument.preview_url;
+    } else {
+      // 旧格式：构建URL
+      pageUrl = `${this.currentDocument.base_url}/page-${pageNumber}.png`;
+    }
 
-    // Load the image
+    if (!pageUrl) {
+      this.showError(`无法获取第 ${pageNumber} 页的URL`);
+      return;
+    }
+
+    // 加载图像
     if (this.elements.previewImage) {
-      const img = new Image ();
+      const img = new Image();
       img.onload = () => {
         this.elements.previewImage.src = pageUrl;
-        this.elements.previewImage.classList.remove ('hidden');
+        this.elements.previewImage.classList.remove('hidden');
 
-        // Remove loader
-        const loader = document.getElementById ('document-loader');
+        // 移除加载器
+        const loader = document.getElementById('document-loader');
         if (loader && loader.parentNode) {
-          loader.parentNode.removeChild (loader);
+          loader.parentNode.removeChild(loader);
         }
       };
 
       img.onerror = () => {
-        this.showError (`无法加载第 ${pageNumber} 页`);
+        this.showError(`无法加载第 ${pageNumber} 页`);
       };
 
       img.src = pageUrl;
     } else {
-      this.showError ('Preview image element not found');
+      this.showError('Preview image element not found');
     }
 
-    // Update current page
+    // 更新当前页面
     this.currentPage = pageNumber;
-    this.updatePageInfo ();
+    this.updatePageInfo();
 
-    // Update navigation buttons
+    // 更新导航按钮
     if (this.elements.prevPageBtn) {
       this.elements.prevPageBtn.disabled = pageNumber <= 1;
     }
