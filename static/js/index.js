@@ -1,29 +1,35 @@
-document.addEventListener ('DOMContentLoaded', () => {
-  // Ensure we only create one instance
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize component loader if not already done
+  if (!window.componentLoader) {
+    window.componentLoader = new ComponentLoader();
+    window.componentLoader.initializeApp();
+  }
+  
+  // Ensure we only create one instance of CaseManagement
   if (typeof CaseManagement === 'function' && !window.caseManagement) {
-    window.caseManagement = new CaseManagement ();
+    window.caseManagement = new CaseManagement();
 
-    // Add new case button handler
-    const newCaseBtn = document.getElementById ('new-case-btn');
-    if (newCaseBtn) {
-      newCaseBtn.addEventListener ('click', () => {
-        if (window.caseForm) {
-          window.caseForm.showCreateModal ();
-        }
-      });
-    }
+    // Add new case button handler after component is loaded
+    setTimeout(() => {
+      const newCaseBtn = document.getElementById('new-case-btn');
+      if (newCaseBtn) {
+        newCaseBtn.addEventListener('click', () => {
+          if (window.caseForm) {
+            window.caseForm.showCreateModal();
+          }
+        });
+      }
+    }, 100);
   } else if (window.caseManagement) {
-    console.log ('CaseManagement already initialized');
+    console.log('CaseManagement already initialized');
   } else {
-    console.error (
+    console.error(
       'CaseManagement class not found. Make sure case_management.js is loaded correctly.'
     );
   }
 });
 
-// Add this at the end of your index.js file
-
-// Debug function to check document viewer initialization
+// Debug function remains the same
 window.debugDocumentViewer = function() {
   console.log('Document Viewer Debug:');
   console.log('- Initialized:', window.documentViewer ? 'Yes' : 'No');
